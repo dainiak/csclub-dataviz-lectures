@@ -1,0 +1,34 @@
+.ink-controls {
+    position: fixed;
+    bottom: 10px;
+    right: 200px;
+    cursor: default;
+    z-index: 130;
+}
+
+.ink-pencil, .ink-formula, .ink-clear, .ink-erase, .ink-hidecanvas {
+    float: left;
+    display: inline;
+    font-size: 20pt;
+    padding-left: 10pt;
+    padding-right: 10pt;
+}
+.ink-pencil:before {
+    content: '✎';
+}
+
+.ink-erase:before {
+    content: '␡'
+}
+
+.ink-formula:before {
+    content: '∑'
+}
+
+.ink-clear:before {
+    content: '⎚'
+}
+
+.ink-hidecanvas:before {
+    content: '⊠'
+}

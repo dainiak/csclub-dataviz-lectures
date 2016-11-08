@@ -1,0 +1,38 @@
+/* CSS for highlighting single steps in enumeration */
+.reveal .slides section .fragment.step {
+    opacity: 0;
+    transition-duration: 1s;
+}
+.reveal .slides section .fragment.step.visible {
+    opacity: 0.3;
+    transition-duration: 1s;
+    /*visibility: visible;*/
+}
+.reveal .slides section .fragment.step.current-fragment {
+    opacity: 1;
+    transition-duration: 1s;
+    /*visibility: visible;*/
+}
+
+
+/* Underline animation by Josh Broton, see http://goo.gl/Yeh1aX   */
+.reveal .slides section .fragment.sliding-underline {
+    display: inline-block;
+    visibility: visible;
+    opacity: 1;
+}
+.reveal .slides section .fragment.sliding-underline:after {
+    content: '';
+    display: block;
+    margin-top: -5px;
+    height: 3px;
+    width: 0;
+    background: transparent;
+    transition: width .5s ease, background-color .5s ease;
+    visibility: visible;
+    opacity: 1;
+}
+.reveal .slides section .fragment.sliding-underline.visible:after {
+    width: 100%;
+    background: #068ee9;
+}
