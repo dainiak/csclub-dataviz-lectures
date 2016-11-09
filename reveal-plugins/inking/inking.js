@@ -1,37 +1,57 @@
 /*
     Inking plugin for reveal.js
-    Relies heavily on fabric.js framework
+
     Plugin author: Alex Dainiak
     Web: https://github.com/dainiak
     Email: dainiak@gmail.com
- */
+
+    Powered by:
+        https://github.com/kangax/fabric.js/  (MIT license)
+        https://github.com/niklasvh/html2canvas  (MIT license)
+        https://github.com/Khan/KaTeX  (MIT license)
+        https://github.com/mathjax/MathJax  (Apache-2.0 license)
+*/
 
 var RevealInking = window.RevealInking || (function (){
-    var link = document.createElement( 'link' );
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = '../reveal-plugins/inking/inking.css';
-    document.getElementsByTagName( 'head' )[0].appendChild( link );
+    var inkingCSS = 'CSS: .ink-controls {position: fixed;bottom: 10px;right: 200px;cursor: default;z-index: 130;}'
+            + '.ink-pencil, .ink-formula, .ink-clear, .ink-erase, .ink-hidecanvas {float: left;display: inline;font-size: 20pt;padding-left: 10pt; padding-right: 10pt;}'
+            + ".ink-pencil:before {content: '✎'} .ink-erase:before {content: '␡'} .ink-formula:before {content: '∑'} .ink-clear:before {content: '⎚'} .ink-hidecanvas:before {content: '⊠'}";
+
+    var options = Reveal.getConfig().inking || {};
+    var RENDERING_RESOLUTION = options.renderingResolution || 4;
+    var CANVAS_ABOVE_CONTROLS = !!(options.canvasAboveControls);
+    var PENCIL_COLOR = options.pencilColor || 'rgb(0,250,0)';
+    var INK_SHADOW = options.inkShadow || ( PENCIL_COLOR == 'rgb(0,250,0)' ? 'rgb(0,50,0)' : '' );
+    var FORMULAE_COLOR = options.mathColor || 'rgb(250,250,250)';
+    var FORMULAE_SHADOW = options.mathShadow || ( FORMULAE_COLOR == 'rgb(250,250,250)' ? 'rgb(250,250,250)' : '' )
+    var DISPLAY_STYLE_MATH = options.mathDisplayStyle !== false;
+    var MATH_RENDERING_ENGINE = options.mathRenderer || 'MathJax';
+    var FORMULAE_SUPPORT_ENABLED = options.math !== false;
+    var MATH_MACROS = options.mathMacros || [];
 
     var currentFormula = '';
     var currentImage = null;
-    var formulaeRenderingResolution = 1;
-    var canvasAboveControls = true;
-    var drawShadows = true;
-    var pencilColor = 'rgb(250,0,0)';
-    var formulaeColor = 'rgb(250,250,250)';
     var isInDrawMode = false;
     var isInEraseMode = false;
     var isMouseLeftButtonDown = false;
     var isShiftDown = false;
+    var formulaRenderingDiv = null;
 
-    var pathToFabric = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js';
+    var scriptsToLoad = {
+        'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js' : !window.fabric,
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js' : FORMULAE_SUPPORT_ENABLED && !window.html2canvas,
+        'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.js' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex,
+        'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex,
+        'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
+    };
+    scriptsToLoad[inkingCSS] = true;
 
-    loadScript(pathToFabric, function () {
+
+    loadScripts(scriptsToLoad, function () {
         var viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
         var viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         var bottomPadding = 0;
-        if (canvasAboveControls){
+        if (CANVAS_ABOVE_CONTROLS){
             bottomPadding = parseInt(window.getComputedStyle(document.querySelector('.controls')).height) + parseInt(window.getComputedStyle(document.querySelector('.controls')).bottom);
         }
 
@@ -67,23 +87,23 @@ var RevealInking = window.RevealInking || (function (){
         });
 
 
-        canvas.on('object:added', function(e){
-            var obj = e.target;
+        canvas.on('object:added', function(evt){
+            var obj = evt.target;
             if(obj.type == 'path') {
                 obj.hasControls = false;
                 obj.hasBorders = false;
-                if (drawShadows){
+                if (INK_SHADOW){
                     obj.setShadow({
-                        color: 'rgb(50,0,0)',
+                        color: INK_SHADOW,
                         blur: 10
                     });
                 }
             }
         });
 
-        canvas.on('mouse:over', function(e){
+        canvas.on('mouse:over', function(evt){
             if(isInEraseMode && isMouseLeftButtonDown) {
-                e.target.remove();
+                evt.target.remove();
             }
         });
 
@@ -110,44 +130,50 @@ var RevealInking = window.RevealInking || (function (){
 
         canvas.upperCanvasEl.style.position = 'fixed';
         canvas.lowerCanvasEl.style.position = 'fixed';
-        canvas.freeDrawingBrush.color = pencilColor;
+        canvas.freeDrawingBrush.color = PENCIL_COLOR;
         canvas.freeDrawingBrush.width = 2;
         canvas.targetFindTolerance = 3;
-        window.addEventListener( 'keydown', function(e){
-            if(e.keyCode == 17) {
+        window.addEventListener( 'keydown', function(evt){
+            if(evt.keyCode == 17) {
                 enterDrawingMode();
             }
-            if(e.keyCode == 16){
+            if(evt.keyCode == 16){
                 isShiftDown = true;
                 enterDeletionMode();
                 canvas.selection = false;
             }
         });
-        canvas.on( 'mouse:down', function(e) {
+        canvas.on( 'mouse:down', function() {
             isMouseLeftButtonDown = true;
         });
-        canvas.on( 'mouse:up', function(e) {
+        canvas.on( 'mouse:up', function() {
             isMouseLeftButtonDown = false;
         });
 
-        canvas.on( 'selection:cleared', function(e) {
+        canvas.on( 'selection:cleared', function() {
             if(currentImage){
                 currentImage = null;
+                currentFormula = '';
                 document.querySelector('.ink-formula').style.textShadow = '';
             }
         });
 
-        window.addEventListener( 'keyup', function(e){
-            if(e.keyCode == 17) {
+        window.addEventListener( 'keyup', function(evt){
+            if(evt.keyCode == 17) {
+                canvasElement.dispatchEvent(new MouseEvent('mouseup', {
+                    'view': window,
+                    'bubbles': true,
+                    'cancelable': true
+                }));
                 leaveDrawingMode();
             }
-            if(e.keyCode == 16) {
+            if(evt.keyCode == 16) {
                 leaveDeletionMode();
             }
-            if(e.keyCode == 46) {
+            if(evt.keyCode == 46) {
                 if(canvas.getActiveGroup()) {
-                    canvas.getActiveGroup().getObjects().forEach(function (o) {
-                        o.remove();
+                    canvas.getActiveGroup().getObjects().forEach(function (obj) {
+                        obj.remove();
                     });
                 }
                 if(canvas.getActiveObject()){
@@ -157,30 +183,36 @@ var RevealInking = window.RevealInking || (function (){
         });
 
 
-        window.addEventListener( 'keyup', function(e){
-            if(e.keyCode == 187) {
+        window.addEventListener( 'keyup', function(evt){
+            if(evt.keyCode == 187) {
                 createNewFormulaWithQuery();
             }
         });
 
-        var controls = createSingletonNode(document.body, 'aside', 'ink-controls',
-            '<div class="ink-pencil"></div>' +
+        var controls = document.createElement( 'aside' );
+		controls.classList.add( 'ink-controls' );
+		controls.innerHTML = '<div class="ink-pencil"></div>' +
             '<div class="ink-erase"></div>' +
-			'<div class="ink-formula"></div>' +
+            (FORMULAE_SUPPORT_ENABLED ? '<div class="ink-formula"></div>' : '') +
 			'<div class="ink-clear"></div>' +
-            '<div class="ink-hidecanvas"></div>');
+            '<div class="ink-hidecanvas"></div>';
+		document.body.appendChild( controls );
 
         document.querySelector('.ink-pencil').onclick = function(){
             toggleDrawingMode();
         };
 
-        document.querySelector('.ink-formula').onclick = createNewFormulaWithQuery;
+        if(FORMULAE_SUPPORT_ENABLED){
+            document.querySelector('.ink-formula').onclick = createNewFormulaWithQuery;
+        }
 
-        document.querySelector('.ink-clear').onclick = function(){
+        document.querySelector('.ink-clear').onmousedown = function(){
+            document.querySelector('.ink-clear').style.textShadow = '0 0 1px white';
+            setTimeout( function(){document.querySelector('.ink-clear').style.textShadow = '';}, 200 );
             canvas.clear();
         };
 
-        document.querySelector('.ink-hidecanvas').onclick = function(){
+        document.querySelector('.ink-hidecanvas').onmousedown = function(){
             var cContainer = document.querySelector('.canvas-container');
             if (cContainer.style.display == 'none'){
                 document.querySelector('.ink-hidecanvas').style.textShadow = '';
@@ -192,6 +224,10 @@ var RevealInking = window.RevealInking || (function (){
             }
 
         };
+        Reveal.addEventListener('overviewshown', function (event) {
+            document.querySelector('.canvas-container').style.display = 'none';
+            document.querySelector('.ink-hidecanvas').style.textShadow = '0 0 1px white';
+        });
 
         document.querySelector('.ink-erase').onclick = function(){
             if (isInEraseMode){
@@ -212,7 +248,7 @@ var RevealInking = window.RevealInking || (function (){
         }
         function enterDrawingMode(){
                 canvas.isDrawingMode = true;
-                document.querySelector('.ink-pencil').style.textShadow = '0 0 5px ' + pencilColor;
+                document.querySelector('.ink-pencil').style.textShadow = '0 0 5px ' + PENCIL_COLOR;
         }
         function leaveDrawingMode() {
                 canvas.isDrawingMode = false;
@@ -220,29 +256,32 @@ var RevealInking = window.RevealInking || (function (){
         }
 
         function createNewFormulaWithQuery(){
-            document.querySelector('.ink-formula').style.textShadow = '0 0 5px ' + formulaeColor;
+            document.querySelector('.ink-formula').style.textShadow = '0 0 5px ' + FORMULAE_COLOR;
 
             var currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
             var style = {
-                color: formulaeColor,
-                fontSize: currentFontSize.replace(/^\d+/, (formulaeRenderingResolution * parseInt(currentFontSize)).toString())
+                color: FORMULAE_COLOR,
+                fontSize: currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString())
             };
+            createFormulaRenderingDiv(style);
             var formula = prompt('Please enter a formula', currentFormula);
-            if(formula) {
-                renderFormulaToImageKatex(formula, style, function (img) {
+            if(formula && formula.trim()) {
+                formula = formula.trim();
+                for(var i = 0; i < MATH_MACROS.length; ++i){
+                    var from = MATH_MACROS[i][0].replace(/[\\$^[{}()?.*|]/g, function($0){return '\\'+$0});
+                    var to = MATH_MACROS[i][1];
+                    formula = formula.replace( new RegExp( from, 'g'), to );
+                }
+
+                (MATH_RENDERING_ENGINE == 'MathJax' ? renderFormulaToImageMathjax : renderFormulaToImageKatex)(formula, function (img) {
                     img.hasRotatingPoint = false;
                     img.hasBorders = false;
-                    img.preserveAspectRatio = true;
-                    /*if (drawShadows) {
-                        img.setShadow({
-                            color: 'rgb(50,0,0)',
-                            blur: 10
-                        });
-                    }*/
+                    img.centeredScaling = true;
+                    img.lockUniScaling = true;
 
-                    var positionScale = 1 / formulaeRenderingResolution;
-                    var positionLeft = 0;
-                    var positionTop = 0;
+                    var positionScale = 1.0 / RENDERING_RESOLUTION;
+                    var positionLeft = 10;
+                    var positionTop = 10;
                     var positionAngle = 0;
                     if (currentImage) {
                         positionScale = currentImage.getScaleX();
@@ -259,14 +298,22 @@ var RevealInking = window.RevealInking || (function (){
                         scaleX: positionScale,
                         scaleY: positionScale
                     }));
+                    if (FORMULAE_SHADOW){
+                        img.setShadow({
+                            color: FORMULAE_SHADOW,
+                            blur: 10
+                        });
+                    }
 
                     canvas.setActiveObject(img);
 
-                    img.on('selected', function (event) {
+                    img.on('selected', function () {
                         currentFormula = formula;
                         currentImage = img;
-                        document.querySelector('.ink-formula').style.textShadow = '0 0 1px ' + formulaeColor;
+                        document.querySelector('.ink-formula').style.textShadow = '0 0 1px ' + FORMULAE_COLOR;
                     });
+
+                    img.trigger('selected');
                 });
             }
             document.querySelector('.ink-formula').style.textShadow = '';
@@ -283,7 +330,10 @@ var RevealInking = window.RevealInking || (function (){
         return node;
 	}
 
-    function createTemporaryDivUsingStyle(style){
+    function createFormulaRenderingDiv(style){
+        if(formulaRenderingDiv) {
+            return formulaRenderingDiv;
+        }
         style = style || window.getComputedStyle(document.body);
         var div = document.createElement('div');
         div.style.position = 'fixed';
@@ -291,46 +341,111 @@ var RevealInking = window.RevealInking || (function (){
         div.style.opacity = 0;
         div.style.color = style.color;
         div.style.fontSize = style.fontSize;
-        return div;
+        document.body.appendChild(div);
+        formulaRenderingDiv = div;
+        return formulaRenderingDiv;
     }
 
-    function renderFormulaToImageMathjax(formula, style, callback){
-        var tempMathDiv = createTemporaryDivUsingStyle(style);
-        document.body.appendChild(tempMathDiv);
-        tempMathDiv.textContent = '\\(' + formula + '\\)';
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, tempMathDiv]);
+    function renderFormulaToImageMathjax(formula, callback){
+        formula = formula.trim();
+        if( MathJax.Hub.getAllJax(formulaRenderingDiv).length == 0 ){
+            var jax = document.createElement('script');
+            jax.type = 'math/tex';
+            formulaRenderingDiv.appendChild(jax);
+            MathJax.Hub.Queue(['Process', MathJax.Hub, formulaRenderingDiv]);
+        }
+
+        MathJax.Hub.Queue(['Text', MathJax.Hub.getAllJax(formulaRenderingDiv)[0], (DISPLAY_STYLE_MATH ? '\\displaystyle{' : '') + formula + (DISPLAY_STYLE_MATH ? '}' : '')]);
+
         MathJax.Hub.Queue(function () {
-            html2canvas(tempMathDiv, {onrendered: function (newCanvas) {
-                document.body.removeChild(tempMathDiv);
+            html2canvas(formulaRenderingDiv, {onrendered: function (newCanvas) {
                 callback.call( null, new fabric.Image(newCanvas) );
             }});
         });
     }
 
-    function renderFormulaToImageKatex(formula, style, callback){
-        var tempMathDiv = createTemporaryDivUsingStyle(style);
-        document.body.appendChild(tempMathDiv);
-        katex.render(formula, tempMathDiv);
-        html2canvas(tempMathDiv, {onrendered: function (newCanvas) {
-            document.body.removeChild(tempMathDiv);
+    function renderFormulaToImageKatex(formula, callback){
+        try {
+            katex.render(formula, formulaRenderingDiv, {
+                displayMode: DISPLAY_STYLE_MATH,
+                throwOnError: true
+            });
+        }
+        catch (error) {
+        }
+
+        var whatToRender = formulaRenderingDiv.querySelector('.katex-html');
+        if(!whatToRender) {
+            document.querySelector('.ink-formula').style.textShadow = '';
+            alert('Failed to parse the expression');
+            console.log(formulaRenderingDiv);
+            return;
+        }
+
+        html2canvas(whatToRender, {onrendered: function (newCanvas) {
             callback.call( null, new fabric.Image(newCanvas) );
         }});
     }
 
     function loadScript( url, callback ) {
-		var head = document.querySelector( 'head' );
-		var script = document.createElement( 'script' );
-		script.type = 'text/javascript';
-		script.src = url;
+        var script = null;
+        if( url.match(/\.css[^.]*$/) ){
+            script = document.createElement( 'link' );
+            script.rel = 'stylesheet';
+            script.type = 'text/css';
+            script.href = url;
+        }
+        else if( url.match(/\.js[^.]*$/) ){
+            script = document.createElement( 'script' );
+            script.type = 'text/javascript';
+            script.src = url;
+        }
+        else if( url.match(/^CSS: /) ){
+            script = document.createElement( 'style' );
+            script.textContent = url.substring('CSS: '.length);
+        }
+        else {
+            script = document.createElement( 'script' );
+            script.type = 'text/javascript';
+            script.textContent = url;
+        }
 
-		// Wrapper for callback to make sure it only fires once
-		script.onload =  function() {
-			if( typeof callback === 'function' ) {
-				callback.call();
-				callback = null;
-			}
-		};
-
-		head.appendChild( script );
+        if(script.src || script.href){
+            script.onload =  function() {
+                if( typeof callback === 'function' ) {
+                    callback.call();
+                }
+            };
+            document.querySelector( 'head' ).appendChild( script );
+        }
+        else {
+            document.querySelector( 'head' ).appendChild( script );
+            if( typeof callback === 'function' ) {
+                callback.call();
+            }
+        }
 	}
+
+	function loadScripts( requirements, callback ) {
+        for( url in requirements ) {
+            if(requirements[url]) {
+                requirements[url] = false;
+                return loadScript( url, function(){
+                    loadScripts( requirements, callback );
+                });
+            }
+        }
+        if (typeof callback === 'function') {
+            if(Reveal.isReady()) {
+                callback.call();
+                callback = null;
+            }
+            else {
+                Reveal.addEventListener('ready', function () {
+                    callback.call();
+                    callback = null;
+                });
+            }
+        }
+    }
 })();

@@ -504,6 +504,8 @@
         setTimeout(function (){node.classList.add('animated-underline');
         node.classList.add('fire');}, 100);
     }
+
+
     /*
         Perform the animation.
      */

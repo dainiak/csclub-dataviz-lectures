@@ -6,28 +6,12 @@
  */
 
 var RevealHighlight = (function() {
-	var ACE_DEFAULT_THEME =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.theme ?
-				Reveal.getConfig().highlighting.theme
-				: 'twilight';
-	var ACE_DEFAULT_LANGUAGE =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.language ?
-				Reveal.getConfig().highlighting.language
-				: 'python';
-
-	var ACE_URL =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.ace_main_url ?
-				Reveal.getConfig().highlighting.ace_main_url
-				: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ace.js';
-	var ACE_HIGHLIGHT_URL =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.ace_static_highlighter_url ?
-				Reveal.getConfig().highlighting.ace_static_highlighter_url
-				: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ext-static_highlight.js';
-
-	var EDITOR_IN_PLACE_BY_DEFAULT =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.editor_in_place ?
-				Reveal.getConfig().highlighting.editor_in_place
-				: true;
+	var options = Reveal.getConfig().highlighting || {};
+	var ACE_DEFAULT_THEME = options.theme || 'twilight';
+	var ACE_DEFAULT_LANGUAGE = options.language || 'python';
+	var ACE_URL = options.ace_main_url || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ace.js';
+	var ACE_HIGHLIGHT_URL = options.ace_static_highlighter_url || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ext-static_highlight.js';
+	var EDITOR_IN_PLACE_BY_DEFAULT = options.editor_in_place !== false;
 	var CLOSE_ACE_ON_BLUR_BY_DEFAULT =
 		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.close_editor_on_blur ?
 				Reveal.getConfig().highlighting.close_editor_on_blur

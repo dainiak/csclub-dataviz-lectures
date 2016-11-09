@@ -76,7 +76,8 @@ var RevealMath = window.RevealMath || (function(){
 					hat: '\\widehat',
 					emptyset: '\\varnothing',
 					epsilon: '\\varepsilon',
-					step: ['\\class{fragment step}{#1}', 1]
+					step: ['\\class{fragment step}{#1}', 1],
+					zoomable: ['\\class{zoomable}{#1}', 1]
 				}
 			}
 		});
@@ -87,9 +88,9 @@ var RevealMath = window.RevealMath || (function(){
 		MathJax.Hub.Queue( Reveal.layout );
 
 		// Reprocess equations in slides when they turn visible
-		/*Reveal.addEventListener( 'slidechanged', function( event ) {
-			MathJax.Hub.Queue( [ 'Rerender', MathJax.Hub, event.currentSlide ] );
-		} );*/
+		Reveal.addEventListener( 'slidechanged', function( event ) {
+			MathJax.Hub.Queue( [ 'Reprocess', MathJax.Hub, event.currentSlide ] );
+		} );
 
 	} );
 

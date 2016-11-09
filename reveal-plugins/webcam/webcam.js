@@ -7,30 +7,28 @@
  */
 
 (function() {
-    var FULLSCREEN_VIDEO_HORIZONTAL_PADDING =
-		Reveal.getConfig().webcam && Reveal.getConfig().webcam.fullscreen_horizontal_padding ?
-			Reveal.getConfig().webcam.fullscreen_horizontal_padding
-		:
-			20;
-    var FULLSCREEN_VIDEO_VERTICAL_PADDING =
-		Reveal.getConfig().webcam && Reveal.getConfig().webcam.fullscreen_vertical_padding ?
-			Reveal.getConfig().webcam.fullscreen_vertical_padding
-		:
-			20;
-    var FULLSCREEN_VIDEO_OPACITY =
-		Reveal.getConfig().webcam && Reveal.getConfig().webcam.fullscreen_opacity ?
-			Reveal.getConfig().webcam.fullscreen_opacity
-		:
-			1.0;
-    var SHRINK_ON_OVERVIEW =
-		Reveal.getConfig().webcam && Reveal.getConfig().webcam.shrink_on_overview ?
-			Reveal.getConfig().webcam.shrink_on_overview
-		:
-			true;
+    var options = Reveal.getConfig().webcam || {};
+    var FULLSCREEN_VIDEO_HORIZONTAL_PADDING = typeof options.fullscreen_horizontal_padding == 'number' ? options.fullscreen_horizontal_padding : 20;
+    var FULLSCREEN_VIDEO_VERTICAL_PADDING = typeof options.fullscreen_vertical_padding == 'number' ? options.fullscreen_vertical_padding : 20;
+    var FULLSCREEN_VIDEO_OPACITY = options.fullscreen_opacity || 1.0;
+    var SHRINK_ON_OVERVIEW = options.shrink_on_overview !== false;
+    var KEYCODE = options.key || 67;
 
-    const KEYCODE_C = 67;
     var currentlyFullscreen = false;
     var currentlyHidden = false;
+
+    var video = document.createElement('video');
+    video.classList.add('webcam');
+    video.classList.add('permanent');
+    video.style.left = '20px';
+	video.style.top = '20px';
+	video.style.height = '100px';
+	video.style.position = 'fixed';
+	video.style.zIndex ='100';
+	video.style.transition = '0.5s ease';
+	video.style.opacity = '0.3';
+    document.body.appendChild(video);
+
 
     function shrinkWebcamVideo(videoElement) {
         if (!currentlyHidden && videoElement.hasAttribute('data-webcam-old-opacity'))
@@ -145,7 +143,7 @@
                             if ( document.querySelector( ':focus' ) !== null || event.altKey || event.ctrlKey || event.metaKey )
                                 return;
 
-                            if( event.keyCode === KEYCODE_C ) {
+                            if( event.keyCode === KEYCODE ) {
                                 event.preventDefault();
 
                                 if(event.shiftKey){
