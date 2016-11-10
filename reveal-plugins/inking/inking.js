@@ -1,37 +1,41 @@
 /*
-    Inking plugin for reveal.js
+    Inking plugin for reveal.js (https://github.com/hakimel/reveal.js)
 
-    Plugin author: Alex Dainiak
+    Plugin author: Alex Dainiak, Assoc. Prof. at Moscow Institute of Physics and Technology: https://mipt.ru/english/
+
     Web: https://github.com/dainiak
     Email: dainiak@gmail.com
 
-    Powered by:
-        https://github.com/kangax/fabric.js/  (MIT license)
-        https://github.com/niklasvh/html2canvas  (MIT license)
-        https://github.com/Khan/KaTeX  (MIT license)
-        https://github.com/mathjax/MathJax  (Apache-2.0 license)
+    Plugin creation was facilitated by a Vladimir Potanin Foundation grant: http://english.fondpotanin.ru/
+
+    The plugin is powered by:
+        Reveal.js:   https://github.com/hakimel/reveal.js     (MIT license)
+        Fabric.js:   https://github.com/kangax/fabric.js      (MIT license)
+        HTML2canvas: https://github.com/niklasvh/html2canvas  (MIT license)
+        KaTeX:       https://github.com/Khan/KaTeX            (MIT license)
+        MathJax:     https://github.com/mathjax/MathJax       (Apache-2.0 license)
 */
 
 var RevealInking = window.RevealInking || (function (){
-    var inkingCSS = 'CSS: .ink-controls {position: fixed;bottom: 10px;right: 200px;cursor: default;z-index: 130;}'
-            + '.ink-pencil, .ink-formula, .ink-clear, .ink-erase, .ink-hidecanvas {float: left;display: inline;font-size: 20pt;padding-left: 10pt; padding-right: 10pt;}'
-            + ".ink-pencil:before {content: '✎'} .ink-erase:before {content: '␡'} .ink-formula:before {content: '∑'} .ink-clear:before {content: '⎚'} .ink-hidecanvas:before {content: '⊠'}";
-
-    var options = Reveal.getConfig().inking || {};
+        var options = Reveal.getConfig().inking || {};
     var RENDERING_RESOLUTION = options.renderingResolution || 4;
     var CANVAS_ABOVE_CONTROLS = !!(options.canvasAboveControls);
-    var PENCIL_COLOR = options.pencilColor || 'rgb(0,250,0)';
-    var INK_SHADOW = options.inkShadow || ( PENCIL_COLOR == 'rgb(0,250,0)' ? 'rgb(0,50,0)' : '' );
+    var CONTROLS_COLOR = options.controlsColor;
+    var PENCIL_COLOR = options.pencilColor;
+    var INK_SHADOW = options.inkShadow !== undefined ? options.inkShadow : 'rgb(50,50,50)';
     var FORMULAE_COLOR = options.mathColor || 'rgb(250,250,250)';
-    var FORMULAE_SHADOW = options.mathShadow || ( FORMULAE_COLOR == 'rgb(250,250,250)' ? 'rgb(250,250,250)' : '' )
+    var FORMULAE_SHADOW = options.mathShadow || ( FORMULAE_COLOR == 'rgb(250,250,250)' ? 'rgb(250,250,250)' : '' );
     var DISPLAY_STYLE_MATH = options.mathDisplayStyle !== false;
     var MATH_RENDERING_ENGINE = options.mathRenderer || 'MathJax';
     var FORMULAE_SUPPORT_ENABLED = options.math !== false;
     var MATH_MACROS = options.mathMacros || [];
 
+    var inkingCSS = 'CSS: .ink-controls {position: fixed;bottom: 10px;right: 200px;cursor: default;' + (CONTROLS_COLOR ? 'color:' + CONTROLS_COLOR + ';' : '') + 'z-index: 130;}'
+            + '.ink-control-button {float: left;display: inline;font-size: 20pt;padding-left: 10pt; padding-right: 10pt;}'
+            + '.ink-color:before {content: "■"} .ink-pencil:before {content: "✎"} .ink-erase:before {content: "␡"} .ink-formula:before {content: "∑"} .ink-clear:before {content: "⎚"} .ink-hidecanvas:before {content: "⊠"}';
+
     var currentFormula = '';
     var currentImage = null;
-    var isInDrawMode = false;
     var isInEraseMode = false;
     var isMouseLeftButtonDown = false;
     var isShiftDown = false;
@@ -92,12 +96,6 @@ var RevealInking = window.RevealInking || (function (){
             if(obj.type == 'path') {
                 obj.hasControls = false;
                 obj.hasBorders = false;
-                if (INK_SHADOW){
-                    obj.setShadow({
-                        color: INK_SHADOW,
-                        blur: 10
-                    });
-                }
             }
         });
 
@@ -119,9 +117,6 @@ var RevealInking = window.RevealInking || (function (){
         }
         function leaveDeletionMode(){
             if (isInEraseMode) {
-                if(isInDrawMode){
-                    canvas.isDrawingMode = true;
-                }
                 isInEraseMode = false;
                 canvas.selection = true;
                 document.querySelector('.ink-erase').style.textShadow = '';
@@ -130,8 +125,14 @@ var RevealInking = window.RevealInking || (function (){
 
         canvas.upperCanvasEl.style.position = 'fixed';
         canvas.lowerCanvasEl.style.position = 'fixed';
-        canvas.freeDrawingBrush.color = PENCIL_COLOR;
         canvas.freeDrawingBrush.width = 2;
+        if(INK_SHADOW) {
+            canvas.freeDrawingBrush.shadow = new fabric.Shadow({blur: 10, offsetX: 1, offsetY: 1, color: INK_SHADOW});
+        }
+        else{
+            canvas.freeDrawingBrush.shadow = null;
+        }
+
         canvas.targetFindTolerance = 3;
         window.addEventListener( 'keydown', function(evt){
             if(evt.keyCode == 17) {
@@ -191,12 +192,44 @@ var RevealInking = window.RevealInking || (function (){
 
         var controls = document.createElement( 'aside' );
 		controls.classList.add( 'ink-controls' );
-		controls.innerHTML = '<div class="ink-pencil"></div>' +
-            '<div class="ink-erase"></div>' +
-            (FORMULAE_SUPPORT_ENABLED ? '<div class="ink-formula"></div>' : '') +
-			'<div class="ink-clear"></div>' +
-            '<div class="ink-hidecanvas"></div>';
+
+        var colorContols = '';
+        if(!PENCIL_COLOR) {
+            PENCIL_COLOR = 'rgb(250,250,250)'
+            colorContols = '<div class="ink-color ink-control-button" style="color: rgb(250,250,250)"></div>'
+            + '<div class="ink-color ink-control-button" style="color: rgb(250,0,0)"></div>'
+            + '<div class="ink-color ink-control-button" style="color: rgb(0,250,0)"></div>'
+            + '<div class="ink-color ink-control-button" style="color: rgb(0,0,250)"></div>';
+        }
+
+		controls.innerHTML =
+              colorContols
+            + '<div class="ink-pencil ink-control-button"></div>'
+            + '<div class="ink-erase ink-control-button"></div>'
+            + (FORMULAE_SUPPORT_ENABLED ? '<div class="ink-formula ink-control-button"></div>' : '')
+			+ '<div class="ink-clear ink-control-button"></div>'
+            + '<div class="ink-hidecanvas ink-control-button"></div>';
 		document.body.appendChild( controls );
+        function toggleColorChoosers(b) {
+            document.querySelectorAll('.ink-color').forEach(function(element){
+                element.style.visibility = b ? 'visible' : 'hidden';
+            });
+        }
+
+        toggleColorChoosers(false);
+
+        document.querySelectorAll('.ink-color').forEach(function(element){
+            element.onmousedown = function(event){
+                var btn = event.target;
+                PENCIL_COLOR = btn.style.color;
+                canvas.freeDrawingBrush.color = PENCIL_COLOR;
+                if(canvas.isDrawingMode) {
+                    document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + PENCIL_COLOR;
+                }
+                btn.style.textShadow = '0 0 20px ' + btn.style.color;
+                setTimeout( function(){btn.style.textShadow = '';}, 200 );
+            };
+        });
 
         document.querySelector('.ink-pencil').onclick = function(){
             toggleDrawingMode();
@@ -206,9 +239,10 @@ var RevealInking = window.RevealInking || (function (){
             document.querySelector('.ink-formula').onclick = createNewFormulaWithQuery;
         }
 
-        document.querySelector('.ink-clear').onmousedown = function(){
-            document.querySelector('.ink-clear').style.textShadow = '0 0 1px white';
-            setTimeout( function(){document.querySelector('.ink-clear').style.textShadow = '';}, 200 );
+        document.querySelector('.ink-clear').onmousedown = function(event){
+            var btn = event.target;
+            btn.style.textShadow = '0 0 5px white';
+            setTimeout( function(){btn.style.textShadow = '';}, 200 );
             canvas.clear();
         };
 
@@ -247,16 +281,19 @@ var RevealInking = window.RevealInking || (function (){
             }
         }
         function enterDrawingMode(){
-                canvas.isDrawingMode = true;
-                document.querySelector('.ink-pencil').style.textShadow = '0 0 5px ' + PENCIL_COLOR;
+            canvas.freeDrawingBrush.color = PENCIL_COLOR;
+            canvas.isDrawingMode = true;
+            document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + PENCIL_COLOR;
+            toggleColorChoosers(true);
         }
         function leaveDrawingMode() {
-                canvas.isDrawingMode = false;
-                document.querySelector('.ink-pencil').style.textShadow = '';
+            canvas.isDrawingMode = false;
+            document.querySelector('.ink-pencil').style.textShadow = '';
+            toggleColorChoosers(false);
         }
 
         function createNewFormulaWithQuery(){
-            document.querySelector('.ink-formula').style.textShadow = '0 0 5px ' + FORMULAE_COLOR;
+            document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + FORMULAE_COLOR;
 
             var currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
             var style = {
@@ -299,10 +336,7 @@ var RevealInking = window.RevealInking || (function (){
                         scaleY: positionScale
                     }));
                     if (FORMULAE_SHADOW){
-                        img.setShadow({
-                            color: FORMULAE_SHADOW,
-                            blur: 10
-                        });
+                        img.setShadow(new fabric.Shadow({blur: 10, offsetX: 1, offsetY: 1, color: FORMULAE_SHADOW}));
                     }
 
                     canvas.setActiveObject(img);
@@ -310,7 +344,7 @@ var RevealInking = window.RevealInking || (function (){
                     img.on('selected', function () {
                         currentFormula = formula;
                         currentImage = img;
-                        document.querySelector('.ink-formula').style.textShadow = '0 0 1px ' + FORMULAE_COLOR;
+                        document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + FORMULAE_COLOR;
                     });
 
                     img.trigger('selected');
@@ -448,4 +482,6 @@ var RevealInking = window.RevealInking || (function (){
             }
         }
     }
+
+    return true;
 })();
