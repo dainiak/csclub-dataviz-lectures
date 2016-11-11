@@ -47,6 +47,7 @@ var RevealHighlight = (function() {
 		var aceTheme = 'ace/theme/' + (codeElement.hasAttribute('data-theme') ? codeElement.getAttribute('data-theme') : ACE_DEFAULT_THEME);
 		var aceMode = 'ace/mode/' + (codeElement.hasAttribute('data-language') ? codeElement.getAttribute('data-language') : ACE_DEFAULT_LANGUAGE);
 		var highlight = ace.require('ace/ext/static_highlight');
+
 		function doStaticHighlight(element) {
 				highlight(element, {
 				mode: aceMode,
@@ -54,88 +55,109 @@ var RevealHighlight = (function() {
 				startLineNumber: 1,
 				showGutter: true,
 				showPrintMargin: false,
-				trim: element.hasAttribute( 'data-trim' )
+				maxLines: Infinity,
+				trim: element.hasAttribute( 'data-trim' ),
+				fontSize: codeElement['data-ace-font-size'] || ACE_DEFAULT_FONT_SIZE
 			});
 		}
 
-		function destroyEditorDiscardChanges(editor) {
-			editor.container.style.transition = '0.4s ease';
-			editor.container.style.opacity = 0;
-			setTimeout(function () {
-				if(editor.container.parentNode){
-					editor.container.parentNode.removeChild(editor.container);
-				}
-			}, 500);
-		}
 		function destroyEditor(editor) {
+			if( editor.isInPlace ) {
+				editor.destroy();
+			}
+			else{
+				editor.container.style.transition = '0.4s ease';
+				editor.container.style.opacity = 0;
+				setTimeout(function () {
+					if(editor.container.parentNode){
+						editor.container.parentNode.removeChild(editor.container);
+					}
+					editor.destroy();
+				}, 400);
+			}
+		}
+		function destroyEditorSavingChanges(editor) {
 			editor.originalCodeElement.textContent = editor.getValue();
 			editor.originalCodeElement.setAttribute('data-raw-code', editor.getValue());
 			doStaticHighlight(editor.originalCodeElement);
-			destroyEditorDiscardChanges(editor);
+			destroyEditor(editor);
 		}
+
+		ace.require('ace/commands/default_commands').commands.push({
+			name: 'Return to slideshow discarding changes',
+			bindKey: 'Esc',
+			exec: destroyEditor
+		});
+		ace.require('ace/commands/default_commands').commands.push({
+			name: 'Return to slideshow saving changes',
+			bindKey: 'Ctrl+Enter',
+			exec: destroyEditorSavingChanges
+		});
 
 		codeElement.setAttribute('data-raw-code', codeElement.textContent);
 		doStaticHighlight(codeElement);
 
 		if(codeElement.contentEditable && codeElement.contentEditable !== 'inherit') {
 			codeElement.contentEditable = 'false';
-			ace.require('ace/commands/default_commands').commands.push({
-				name: 'Return to slideshow discarding changes',
-				bindKey: 'Esc',
-				exec: destroyEditorDiscardChanges
-			});
+
 			codeElement.onclick = function (event) {
 				if( MOUSECLICK_MODIFIER && !event[MOUSECLICK_MODIFIER+'Key']) {
 					return;
 				}
-
-				var editorDiv = document.createElement('div');
-				var revealScale = Reveal.getScale();
-				var bounds = codeElement.getBoundingClientRect();
-				editorDiv.style.position = 'fixed';
-				editorDiv.style.zIndex = editorDiv.style.zIndex + 1;
-				if(codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT){
-					editorDiv.style.width = Math.ceil(revealScale * bounds.width).toString() + 'px';
-					editorDiv.style.height = Math.ceil(revealScale * bounds.height).toString() + 'px';
-					editorDiv.style.left  = Math.floor(revealScale * bounds.left).toString() + 'px';
-					editorDiv.style.top = Math.floor(revealScale * bounds.top).toString() + 'px';
+				var editor = null;
+				var editorDiv = null;
+				if(codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT) {
+					editor = ace.edit(codeElement);
+					editor.commands.removeCommands(["gotoline", "find"]);
 				}
-				else{
+				else {
+					editorDiv = document.createElement('div');
+					editorDiv.style.opacity = 0;
+					editorDiv.style.position = 'fixed';
 					editorDiv.style.width = '100%';
 					editorDiv.style.height = '100%';
 					editorDiv.style.left = '0px';
 					editorDiv.style.top = '0px';
+					editorDiv.style.zIndex = window.getComputedStyle(Reveal.getCurrentSlide()).zIndex + 1;
+
+					document.body.appendChild(editorDiv);
+					editor = ace.edit(editorDiv);
+					editor.commands.removeCommands(["gotoline", "find"]);
 				}
 
-				editorDiv.style.opacity = 0;
-				document.body.appendChild(editorDiv);
-				var editor = ace.edit(editorDiv);
 				editor.$blockScrolling = Infinity; // To disable annoying ACE warning
 				var value = codeElement.hasAttribute('data-raw-code') ? codeElement.getAttribute('data-raw-code') : codeElement.textContent;
 				if (codeElement.hasAttribute( 'data-trim' )) {
 					value = value.trim();
 				}
 				editor.setValue(value);
-				editor.setFontSize(codeElement['data-ace-font-size'] || ACE_DEFAULT_FONT_SIZE);
 				editor.setOptions({
 					theme: aceTheme,
 					mode: aceMode,
 					wrap: true,
 					showGutter: true,
 					fadeFoldWidgets: false,
-					showPrintMargin: false
+					showPrintMargin: false,
+					fontSize: codeElement['data-ace-font-size'] || ACE_DEFAULT_FONT_SIZE
 				});
-				editor.resize();
+				if(editor.isInPlace) {
+					editor.setOptions({maxLines: Infinity});
+				}
 				editor.originalCodeElement = codeElement;
+				editor.isInPlace = codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT;
 				editor.focus();
 				if(CLOSE_ACE_ON_BLUR_BY_DEFAULT){
 					editor.on('blur', function(){destroyEditor(editor)});
 				}
 				Reveal.addEventListener('slidechanged', function(){destroyEditor(editor)});
 				Reveal.addEventListener('overviewshown', function(){destroyEditor(editor)});
+				editor.resize();
+				Reveal.layout();
 				editor.gotoLine(1);
-				editorDiv.style.transition = '0.5s ease';
-				editorDiv.style.opacity = 1;
+				if(!editor.isInPlace) {
+					editorDiv.style.transition = '0.5s ease';
+					editorDiv.style.opacity = 1;
+				}
 			}
 		}
 	}
