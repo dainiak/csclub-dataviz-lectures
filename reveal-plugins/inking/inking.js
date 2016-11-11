@@ -1,9 +1,8 @@
 /*
-    Inking plugin for reveal.js (https://github.com/hakimel/reveal.js)
+    Inking plugin for reveal.js
 
     Plugin author: Alex Dainiak, Assoc. Prof. at Moscow Institute of Physics and Technology: https://mipt.ru/english/
-
-    Web: https://github.com/dainiak
+    Web: wwww.dainiak.com
     Email: dainiak@gmail.com
 
     Plugin creation was facilitated by a Vladimir Potanin Foundation grant: http://english.fondpotanin.ru/
@@ -17,22 +16,18 @@
 */
 
 var RevealInking = window.RevealInking || (function (){
-        var options = Reveal.getConfig().inking || {};
-    var RENDERING_RESOLUTION = options.renderingResolution || 4;
+    var options = Reveal.getConfig().inking || {};
+    var RENDERING_RESOLUTION = options.renderingResolution || 1;
     var CANVAS_ABOVE_CONTROLS = !!(options.canvasAboveControls);
     var CONTROLS_COLOR = options.controlsColor;
-    var PENCIL_COLOR = options.pencilColor;
+    var INK_COLOR = options.inkColor;
     var INK_SHADOW = options.inkShadow !== undefined ? options.inkShadow : 'rgb(50,50,50)';
-    var FORMULAE_COLOR = options.mathColor || 'rgb(250,250,250)';
-    var FORMULAE_SHADOW = options.mathShadow || ( FORMULAE_COLOR == 'rgb(250,250,250)' ? 'rgb(250,250,250)' : '' );
+    var MATH_COLOR = options.mathColor || 'rgb(250,250,250)';
+    var MATH_SHADOW = options.mathShadow;
     var DISPLAY_STYLE_MATH = options.mathDisplayStyle !== false;
     var MATH_RENDERING_ENGINE = options.mathRenderer || 'MathJax';
     var FORMULAE_SUPPORT_ENABLED = options.math !== false;
     var MATH_MACROS = options.mathMacros || [];
-
-    var inkingCSS = 'CSS: .ink-controls {position: fixed;bottom: 10px;right: 200px;cursor: default;' + (CONTROLS_COLOR ? 'color:' + CONTROLS_COLOR + ';' : '') + 'z-index: 130;}'
-            + '.ink-control-button {float: left;display: inline;font-size: 20pt;padding-left: 10pt; padding-right: 10pt;}'
-            + '.ink-color:before {content: "■"} .ink-pencil:before {content: "✎"} .ink-erase:before {content: "␡"} .ink-formula:before {content: "∑"} .ink-clear:before {content: "⎚"} .ink-hidecanvas:before {content: "⊠"}';
 
     var currentFormula = '';
     var currentImage = null;
@@ -41,15 +36,45 @@ var RevealInking = window.RevealInking || (function (){
     var isShiftDown = false;
     var formulaRenderingDiv = null;
 
-    var scriptsToLoad = {
-        'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js' : !window.fabric,
-        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js' : FORMULAE_SUPPORT_ENABLED && !window.html2canvas,
-        'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.js' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex,
-        'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex,
-        'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML' : FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
-    };
-    scriptsToLoad[inkingCSS] = true;
-
+    var scriptsToLoad = [
+        {
+            content: '.ink-controls {position: fixed;bottom: 10px;right: 200px;cursor: default;'
+                + (CONTROLS_COLOR ? 'color:' + CONTROLS_COLOR + ';' : '')
+                + 'z-index: 130;}'
+                + '.ink-control-button {float: left;display: inline;font-size: 20pt;padding-left: 10pt; padding-right: 10pt;}'
+                + '.ink-color:before {content: "\u25A0"} .ink-pencil:before {content: "\u270E"} '
+                + '.ink-erase:before {content: "\u2421"} .ink-formula:before {content: "\u2211"} '
+                + '.ink-clear:before {content: "\u239A"} .ink-hidecanvas:before {content: "\u22A0"}',
+            type: 'text/css'
+        }, {
+            url: 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js',
+            condition: !window.fabric
+        }, {
+            url: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js',
+            condition: FORMULAE_SUPPORT_ENABLED && !window.html2canvas
+        }, {
+            url: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.js',
+            condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex
+        }, {
+            url: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css',
+            condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'KaTeX' && !window.katex
+        }, {
+            type: 'text/x-mathjax-config',
+            content: options.mathjaxConfig ||
+                "MathJax.Ajax.config.path['Contrib'] = 'https://cdn.mathjax.org/mathjax/contrib';"
+                + "MathJax.Hub.Config({"
+                + "skipStartupTypeset: true, messageStyle: 'none', showMathMenu: false, showMathMenuMSIE: false, showProcessingMessages: false,"
+                + "extensions: ['tex2jax.js'],"
+                + "jax: ['input/TeX', 'output/HTML-CSS'],"
+                + "tex2jax: {preview: 'none'},"
+                + "TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noUndefined.js']}" +
+                + "});",
+            condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
+        }, {
+            url: 'https://cdn.mathjax.org/mathjax/latest/MathJax.js',
+            condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
+        }
+    ];
 
     loadScripts(scriptsToLoad, function () {
         var viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -194,12 +219,18 @@ var RevealInking = window.RevealInking || (function (){
 		controls.classList.add( 'ink-controls' );
 
         var colorContols = '';
-        if(!PENCIL_COLOR) {
-            PENCIL_COLOR = 'rgb(250,250,250)'
-            colorContols = '<div class="ink-color ink-control-button" style="color: rgb(250,250,250)"></div>'
-            + '<div class="ink-color ink-control-button" style="color: rgb(250,0,0)"></div>'
-            + '<div class="ink-color ink-control-button" style="color: rgb(0,250,0)"></div>'
-            + '<div class="ink-color ink-control-button" style="color: rgb(0,0,250)"></div>';
+        if(!INK_COLOR) {
+            INK_COLOR = 'rgb(250,250,250);rgb(250,0,0);rgb(0,250,0);rgb(0,0,250)';
+        }
+        if(INK_COLOR.indexOf(';') >= 0) {
+            var colors = INK_COLOR.trim().split(';');
+            for(var i = 0; i < colors.length; ++i){
+                colors[i] = colors[i].trim();
+                if(colors[i]) {
+                    colorContols += '<div class="ink-color ink-control-button" style="color: ' + colors[i] + '"></div>';
+                }
+            }
+            INK_COLOR = colors[0];
         }
 
 		controls.innerHTML =
@@ -211,20 +242,21 @@ var RevealInking = window.RevealInking || (function (){
             + '<div class="ink-hidecanvas ink-control-button"></div>';
 		document.body.appendChild( controls );
         function toggleColorChoosers(b) {
-            document.querySelectorAll('.ink-color').forEach(function(element){
+            Array.prototype.forEach.call(document.querySelectorAll('.ink-color'), function(element){
                 element.style.visibility = b ? 'visible' : 'hidden';
             });
         }
 
         toggleColorChoosers(false);
+        document.querySelector('.canvas-container').oncontextmenu = function(){return false};
 
-        document.querySelectorAll('.ink-color').forEach(function(element){
+        Array.prototype.forEach.call(document.querySelectorAll('.ink-color'), function(element){
             element.onmousedown = function(event){
                 var btn = event.target;
-                PENCIL_COLOR = btn.style.color;
-                canvas.freeDrawingBrush.color = PENCIL_COLOR;
+                INK_COLOR = btn.style.color;
+                canvas.freeDrawingBrush.color = INK_COLOR;
                 if(canvas.isDrawingMode) {
-                    document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + PENCIL_COLOR;
+                    document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + INK_COLOR;
                 }
                 btn.style.textShadow = '0 0 20px ' + btn.style.color;
                 setTimeout( function(){btn.style.textShadow = '';}, 200 );
@@ -256,7 +288,6 @@ var RevealInking = window.RevealInking || (function (){
                 cContainer.style.display = 'none';
                 document.querySelector('.ink-hidecanvas').style.textShadow = '0 0 1px white';
             }
-
         };
         Reveal.addEventListener('overviewshown', function (event) {
             document.querySelector('.canvas-container').style.display = 'none';
@@ -281,9 +312,9 @@ var RevealInking = window.RevealInking || (function (){
             }
         }
         function enterDrawingMode(){
-            canvas.freeDrawingBrush.color = PENCIL_COLOR;
+            canvas.freeDrawingBrush.color = INK_COLOR;
             canvas.isDrawingMode = true;
-            document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + PENCIL_COLOR;
+            document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + INK_COLOR;
             toggleColorChoosers(true);
         }
         function leaveDrawingMode() {
@@ -293,14 +324,20 @@ var RevealInking = window.RevealInking || (function (){
         }
 
         function createNewFormulaWithQuery(){
-            document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + FORMULAE_COLOR;
+            document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + MATH_COLOR;
+
+            if(!formulaRenderingDiv) {
+                formulaRenderingDiv = document.createElement('div');
+                formulaRenderingDiv.style.position = 'fixed';
+                formulaRenderingDiv.style.top = formulaRenderingDiv.style.left = '0';
+                formulaRenderingDiv.style.opacity = 0;
+                formulaRenderingDiv.style.color = MATH_COLOR;
+                document.body.appendChild(formulaRenderingDiv);
+            }
 
             var currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
-            var style = {
-                color: FORMULAE_COLOR,
-                fontSize: currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString())
-            };
-            createFormulaRenderingDiv(style);
+            formulaRenderingDiv.style.fontSize = currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString());
+
             var formula = prompt('Please enter a formula', currentFormula);
             if(formula && formula.trim()) {
                 formula = formula.trim();
@@ -335,8 +372,11 @@ var RevealInking = window.RevealInking || (function (){
                         scaleX: positionScale,
                         scaleY: positionScale
                     }));
-                    if (FORMULAE_SHADOW){
-                        img.setShadow(new fabric.Shadow({blur: 10, offsetX: 1, offsetY: 1, color: FORMULAE_SHADOW}));
+                    if (MATH_SHADOW){
+                        img.setShadow(new fabric.Shadow({blur: 10, offsetX: 1, offsetY: 1, color: MATH_SHADOW}));
+                    }
+                    else if(MATH_SHADOW === undefined){
+                        img.setShadow(new fabric.Shadow({blur: 1, offsetX: 0, offsetY: 0, color: MATH_COLOR}));
                     }
 
                     canvas.setActiveObject(img);
@@ -344,7 +384,7 @@ var RevealInking = window.RevealInking || (function (){
                     img.on('selected', function () {
                         currentFormula = formula;
                         currentImage = img;
-                        document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + FORMULAE_COLOR;
+                        document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + MATH_COLOR;
                     });
 
                     img.trigger('selected');
@@ -353,32 +393,6 @@ var RevealInking = window.RevealInking || (function (){
             document.querySelector('.ink-formula').style.textShadow = '';
         }
     } );
-
-    function createSingletonNode( container, tagname, classname, innerHTML ) {
-		var node = document.createElement( tagname );
-		node.classList.add( classname );
-		if( typeof innerHTML === 'string' ) {
-			node.innerHTML = innerHTML;
-		}
-		container.appendChild( node );
-        return node;
-	}
-
-    function createFormulaRenderingDiv(style){
-        if(formulaRenderingDiv) {
-            return formulaRenderingDiv;
-        }
-        style = style || window.getComputedStyle(document.body);
-        var div = document.createElement('div');
-        div.style.position = 'fixed';
-        div.style.top = div.style.left = '0';
-        div.style.opacity = 0;
-        div.style.color = style.color;
-        div.style.fontSize = style.fontSize;
-        document.body.appendChild(div);
-        formulaRenderingDiv = div;
-        return formulaRenderingDiv;
-    }
 
     function renderFormulaToImageMathjax(formula, callback){
         formula = formula.trim();
@@ -421,66 +435,85 @@ var RevealInking = window.RevealInking || (function (){
         }});
     }
 
-    function loadScript( url, callback ) {
-        var script = null;
-        if( url.match(/\.css[^.]*$/) ){
-            script = document.createElement( 'link' );
-            script.rel = 'stylesheet';
-            script.type = 'text/css';
-            script.href = url;
-        }
-        else if( url.match(/\.js[^.]*$/) ){
-            script = document.createElement( 'script' );
-            script.type = 'text/javascript';
-            script.src = url;
-        }
-        else if( url.match(/^CSS: /) ){
-            script = document.createElement( 'style' );
-            script.textContent = url.substring('CSS: '.length);
-        }
-        else {
-            script = document.createElement( 'script' );
-            script.type = 'text/javascript';
-            script.textContent = url;
+    function loadScript( params, extraCallback ) {
+        if(params.condition !== undefined
+          && !(params.condition === true || typeof params.condition == 'function' && params.condition.call())) {
+            return extraCallback ? extraCallback.call() : false;
         }
 
-        if(script.src || script.href){
-            script.onload =  function() {
-                if( typeof callback === 'function' ) {
-                    callback.call();
-                }
-            };
-            document.querySelector( 'head' ).appendChild( script );
+        if( params.type === undefined ) {
+            params.type = (params.url && params.url.match(/\.css[^.]*$/)) ? 'text/css' : 'text/javascript';
+        }
+
+        var script = null;
+
+        if( params.type == 'text/css' ){
+            if( params.content ){
+                script = document.createElement( 'style' );
+                script.textContent = params.content;
+            }
+            else {
+                script = document.createElement( 'link' );
+                script.rel = 'stylesheet';
+                script.type = 'text/css';
+                script.href = params.url;
+            }
         }
         else {
-            document.querySelector( 'head' ).appendChild( script );
-            if( typeof callback === 'function' ) {
-                callback.call();
+            script = document.createElement('script');
+            script.type = params.type || 'text/javascript';
+            if( params.content ) {
+                script.textContent = params.content;
             }
+            else {
+                script.src = params.url;
+            }
+        }
+
+        if(params.content){
+            document.querySelector( 'head' ).appendChild( script );
+            if(params.callback) {
+                params.callback.call();
+            }
+            if(extraCallback) {
+                extraCallback.call();
+            }
+        }
+        else {
+            script.onload = function(){
+                if(params.callback) {
+                    params.callback.call();
+                }
+                if(extraCallback) {
+                    extraCallback.call();
+                }
+            };
+
+            document.querySelector( 'head' ).appendChild( script );
         }
 	}
 
-	function loadScripts( requirements, callback ) {
-        for( url in requirements ) {
-            if(requirements[url]) {
-                requirements[url] = false;
-                return loadScript( url, function(){
-                    loadScripts( requirements, callback );
-                });
-            }
-        }
-        if (typeof callback === 'function') {
-            if(Reveal.isReady()) {
-                callback.call();
-                callback = null;
-            }
-            else {
-                Reveal.addEventListener('ready', function () {
+	function loadScripts( scripts, callback ) {
+        if(!scripts || scripts.length == 0) {
+            if (typeof callback === 'function') {
+                if(Reveal.isReady()) {
                     callback.call();
                     callback = null;
-                });
+                }
+                else {
+                    Reveal.addEventListener('ready', function () {
+                        callback.call();
+                        callback = null;
+                    });
+                }
             }
+            return;
         }
+
+        var script = scripts.splice(0, 1)[0];
+        loadScript(script, function () {
+            loadScripts(scripts, callback);
+        });
     }
 
     return true;
