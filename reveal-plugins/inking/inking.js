@@ -5,7 +5,7 @@
     Web: wwww.dainiak.com
     Email: dainiak@gmail.com
 
-    Plugin creation was facilitated by a Vladimir Potanin Foundation grant: http://english.fondpotanin.ru/
+    Plugin creation has been facilitated by a Vladimir Potanin Foundation grant: http://english.fondpotanin.ru/
 
     The plugin is powered by:
         Reveal.js:   https://github.com/hakimel/reveal.js     (MIT license)
@@ -35,6 +35,7 @@ var RevealInking = window.RevealInking || (function (){
     var isMouseLeftButtonDown = false;
     var isShiftDown = false;
     var formulaRenderingDiv = null;
+    var formulaRenderingJax = null;
 
     var scriptsToLoad = [
         {
@@ -168,6 +169,9 @@ var RevealInking = window.RevealInking || (function (){
                 enterDeletionMode();
                 canvas.selection = false;
             }
+            if(evt.keyCode == 72) {
+                toggleCanvas();
+            }
         });
         canvas.on( 'mouse:down', function() {
             isMouseLeftButtonDown = true;
@@ -278,20 +282,27 @@ var RevealInking = window.RevealInking || (function (){
             canvas.clear();
         };
 
-        document.querySelector('.ink-hidecanvas').onmousedown = function(){
+        function toggleCanvas(on){
             var cContainer = document.querySelector('.canvas-container');
-            if (cContainer.style.display == 'none'){
+            if(on === undefined) {
+                on = cContainer.style.display == 'none';
+            }
+
+            if (on){
                 document.querySelector('.ink-hidecanvas').style.textShadow = '';
                 cContainer.style.display = 'block';
             }
-            else{
+            else {
                 cContainer.style.display = 'none';
                 document.querySelector('.ink-hidecanvas').style.textShadow = '0 0 1px white';
             }
         };
+
+        document.querySelector('.ink-hidecanvas').onmousedown = toggleCanvas;
+
+
         Reveal.addEventListener('overviewshown', function (event) {
-            document.querySelector('.canvas-container').style.display = 'none';
-            document.querySelector('.ink-hidecanvas').style.textShadow = '0 0 1px white';
+            toggleCanvas(false);
         });
 
         document.querySelector('.ink-erase').onclick = function(){
@@ -396,20 +407,31 @@ var RevealInking = window.RevealInking || (function (){
 
     function renderFormulaToImageMathjax(formula, callback){
         formula = formula.trim();
-        if( MathJax.Hub.getAllJax(formulaRenderingDiv).length == 0 ){
-            var jax = document.createElement('script');
-            jax.type = 'math/tex';
-            formulaRenderingDiv.appendChild(jax);
+        formula = DISPLAY_STYLE_MATH ? '\\displaystyle{' + formula + '}' : formula;
+
+        if( !formulaRenderingJax ){
+            var preJax = document.createElement('script');
+            preJax.type = 'math/tex';
+            formulaRenderingDiv.appendChild(preJax);
             MathJax.Hub.Queue(['Process', MathJax.Hub, formulaRenderingDiv]);
+            MathJax.Hub.Queue(function () {
+                formulaRenderingJax = MathJax.Hub.getAllJax(formulaRenderingDiv)[0];
+                MathJax.Hub.Queue(['Text', formulaRenderingJax, formula]);
+                MathJax.Hub.Queue(function () {
+                    html2canvas(formulaRenderingDiv, {onrendered: function (newCanvas) {
+                        callback.call( null, new fabric.Image(newCanvas) );
+                    }})
+                });
+            });
         }
-
-        MathJax.Hub.Queue(['Text', MathJax.Hub.getAllJax(formulaRenderingDiv)[0], (DISPLAY_STYLE_MATH ? '\\displaystyle{' : '') + formula + (DISPLAY_STYLE_MATH ? '}' : '')]);
-
-        MathJax.Hub.Queue(function () {
-            html2canvas(formulaRenderingDiv, {onrendered: function (newCanvas) {
-                callback.call( null, new fabric.Image(newCanvas) );
-            }});
-        });
+        else {
+            MathJax.Hub.Queue(['Text', formulaRenderingJax, formula]);
+            MathJax.Hub.Queue(function () {
+                html2canvas(formulaRenderingDiv, {onrendered: function (newCanvas) {
+                    callback.call( null, new fabric.Image(newCanvas) );
+                }})
+            });
+        }
     }
 
     function renderFormulaToImageKatex(formula, callback){
