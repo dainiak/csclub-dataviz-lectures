@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Алгоритм t-SNE</title>
+
+		<link rel="stylesheet" href="../reveal/css/reveal.css">
+		<link rel="stylesheet" href="../reveal/css/theme/black.css">
+
+		<link rel="stylesheet" href="../css/extras.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal/css/print/pdf.css' : '../reveal/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+
+	</head>
+	<body>
+<div class="reveal">
+<div class="slides">
+<section>
+	<section>
+		<h1>Расстояние Кульбака—Лейблера</h1>
+	</section>
+	<section>
+		<h3>Как измерять расстояние между распределениями?</h3>
+		<ul>
+			<li class="fragment step">Коэффициент корреляции?</li>
+			<ul>
+				<li class="fragment step">идейно просто определяется</li>
+				<li class="fragment step">неудобный градиент</li>
+				<li class="fragment step">$\in [-1,\,1]$</li>
+			</ul>
+			<li class="fragment step">Расстояние Кульбака—Лейблера</li>
+			<ul>
+				<li class="fragment step">удовлетворяет некоторым естественным свойствам</li>
+				<li class="fragment step">не является метрикой</li>
+			</ul>
+		</ul>
+	</section>
+	<section>
+		<h3>Расстояние Кульбака—Лейблера</h3>
+		\(\newcommand{\KL}{\mathrm{KL}}\)
+		<p>Разыскивается: $\step{\KL(\green{\bfP};\,\red{\bfQ})}\step{=\KL(\green{p_1,\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_n})}$</p>
+		<ul>
+			<li class="fragment step">$\KL(\green{p_1,\,\ldots,\,p_n};\,\red{p_1,\,\ldots,\,p_n})=0$</li>
+			<li class="fragment step">$\KL(\green{p_1,\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_n})$
+				<br>$=\KL(\green{p_{\pi(1)},\,\ldots,\,p_{\pi(n)}};\,\red{q_{\pi(1)},\,\ldots,\,q_{\pi(n)}})$</li>
+			<li class="fragment">$\KL\left(\green{\frac{1}{m},\,\ldots,\,\frac{1}{m},\,0,\,\ldots,\,0};\,\red{\frac{1}{n},\,\ldots,\,\frac{1}{n}}\right)$
+				<br>— убывающая функция по $m$ при $m\le n$.</li>
+		</ul>
+	</section>
+	<section>
+		<p>Разыскивается: $\KL(\green{\bfP};\,\red{\bfQ})=\KL(\green{p_1,\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_n})$</p>
+		<ul><li>Если $P_1=\sum_{i=1}^{r}p_i$, $P_2=\sum_{i=r+1}^np_i$, $Q_1=\sum_{i=1}^{r}q_i$, $Q_2=\sum_{i=r+1}^nq_i$, то
+				<br>$\KL(\green{p_1,\,\ldots,\,p_r,\,p_{r+1},\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_r,\,q_{r+1},\,\ldots,\,q_n})$
+				<br>$\step{=\KL(\green{P_1,\,P_2};\,\red{Q_1,\,Q_2})}$
+				<br>&nbsp;$\step{+\green{P_1}\cdot\KL(\green{\frac{p_1}{P_1},\,\ldots,\,\frac{p_r}{P_1}};\,\red{\frac{q_1}{Q_1},\,\ldots,\,\frac{q_r}{Q_1}})}$
+				<br>&nbsp;$\step{+\green{P_2}\cdot\KL(\green{\frac{p_{r+1}}{P_2},\,\ldots,\,\frac{p_n}{P_2}};\,\red{\frac{q_{r+1}}{Q_2},\,\ldots,\,\frac{q_n}{Q_2}}).}$
+		</li></ul>
+	</section>
+	<section>
+		<div class="grey-bg stretch" style="font-size: 16pt">
+			\[\begin{xy}\xymatrix@R=0.1px{
+				&&&&&{\red{q_1}}\ar@{-}[dlll]\\
+				&&{\red{Q_1}}\ar@{-}[dddll] &&&{\red{q_2}}\ar@{-}[lll]\\
+				&&&&&\vdots\\
+				&&&&&{\red{q_r}}\ar@{-}[uulll]\\
+				*[o]{\circ}&&&&&\\
+				&&&&&{\red{q_{r+1}}}\ar@{-}[ddlll]\\
+				&&&&&{\red{q_{r+2}}}\ar@{-}[dlll]\\
+				&&{\red{Q_2}}\ar@{-}[uuull]&&&\vdots\\
+				&&&&&{\red{q_n}}\ar@{-}[ulll]
+			}\end{xy}
+			\begin{xy}\xymatrix@R=0.1px{
+				&&&&&{\green{p_1}}\ar@{-}[dlll]\\
+				&&{\green{P_1}}\ar@{-}[dddll] &&&{\green{p_2}}\ar@{-}[lll]\\
+				&&&&&\vdots\\
+				&&&&&{\green{p_r}}\ar@{-}[uulll]\\
+				*[o]{\circ}&&&&&\\
+				&&&&&{\green{p_{r+1}}}\ar@{-}[ddlll]\\
+				&&&&&{\green{p_{r+2}}}\ar@{-}[dlll]\\
+				&&{\green{P_2}}\ar@{-}[uuull]&&&\vdots\\
+				&&&&&{\green{p_n}}\ar@{-}[ulll]
+			}\end{xy}\]
+		</div>
+	</section>
+	<section>
+		<h3>Расстояние К—Л в кодировании информации</h3>
+		<ul>
+			<li class="fragment step">Символы $a_1,\,\ldots,\,a_n$ встречаются с частотами $p_1,\,\ldots,\,p_n$.</li>
+			<li class="fragment step">Оптимальный код кодирует $a_i$ словом длины $\approx \log_2\frac{1}{p_i}$</li>
+			<li class="fragment step">Закодированный текст больше исходного в $\approx \sum_ip_i\log_2\frac{1}{p_i}$ раз</li>
+			<li class="fragment step">Пусть вместо точных значений $\{\green{p_i}\}$ известны приближённые $\{\red{q_i}\}$.
+				<br>Построенный по $\{\red{q_i}\}$ код будет увеличивать тексты в $\approx \sum_i\green{p_i}\log_2\frac{1}{\red{q_i}}$ раз</li>
+			<li class="fragment step">$\mathrm{KL}(\green{p_1,\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_n})$ — «штраф» за неточное знание.</li>
+		</ul>
+	</section>
+</section>
+<section>
+	<section>
+		<h3>Алгоритм Locally Linear Embedding</h3>
+		<blockquote class="fragment">
+			<p>Делить явления на линейные и нелинейные — всё равно, что делить вселенную на бананы и всё остальное.</p>
+			<footer>
+			— <cite>фольклор</cite>
+			</footer>
+		</blockquote>
+		<blockquote class="fragment">
+			<p>Аппроксимация нелинейного линейным — это превращение необозримого в обозримое.</p>
+			<footer>
+			— <cite>фольклор?</cite>
+			</footer>
+		</blockquote>
+	</section>
+	<section>
+		<ul>
+			<li class="fragment step">Предположение: многомерные данные лежат на хорошо устроенном многообразии небольшой размерности</li>
+			<li class="fragment step stretch">
+				<p>Идеал (если $\dim=2$): «развёртка», сохраняющая локальное взаиморасположение данных</p>
+				<img src="img/s-unfolding.png">
+			</li>
+		</ul>
+	</section>
+</section>
+<section>
+	<h3>База изображений MNIST</h3>
+	<img src="img/mnist.png">
+</section>
+
+
+</div>
+</div>
+<script src="../reveal/lib/js/head.min.js"></script>
+<script src="../reveal/js/reveal.js"></script>
+
+<script>
+Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: true,
+    transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+    animation: {
+        macros:    [
+            ['immediately', 'during 0s'],
+            ['slowly', 'during 1s'],
+            ['fast', 'during 0.2s'],
+            ['dim', 'apply opacity = 0.4 to'],
+            ['highlight', 'apply color = red to']
+        ],
+        default_transition_duration: undefined
+    },
+    highlighting: {
+        editor_in_place: true,
+        close_editor_on_blur: false,
+        mouseclick_modifier_key: null,
+        editor_default_font_size: '14pt'
+    },
+
+    webcam: {
+        fullscreen_horizontal_padding: 20,
+        fullscreen_vertical_padding: 20,
+        fullscreen_opacity: 1,
+        shrink_on_overview: true
+    },
+
+    inking: {
+        mathDisplayStyle: true,
+        mathRenderer: 'MathJax',
+        mathMacros: [['\\1', 'one'],['\\2', '{two}']],
+        inkColor: 'lightgreen'
+    },
+
+    dependencies: [
+        { src: '../reveal-plugins/zoom-js-mod/zoom.js'},
+        { src: '../reveal-plugins/math-mod/math.js' },
+        { src: '../reveal-plugins/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
+        { src: '../reveal-plugins/inking/inking.js' },
+        { src: '../reveal-plugins/animation/cssanimation.js' },
+    ]
+});
+</script>
+</body>
+</html>

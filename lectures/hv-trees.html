@@ -1,23 +1,17 @@
 <!doctype html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
-
+<html lang="ru">
 	<head>
 		<meta charset="utf-8">
+		<meta name="author" content="Oleg Ivchenko & Alex Dainiak @ Moscow Institute of Physics and Technology">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>Визуализация данных</title>
+		<title>HV-алгоритм укладки деревьев</title>
 
-		<meta name="description" content="See http://www.dainiak.com/ru/teaching/ for course syllabus">
-		<meta name="author" content="Alex Dainiak @ Moscow Inistitute of Physics and Technology">
+		<link rel="stylesheet" href="../reveal/css/reveal.css">
+		<link rel="stylesheet" href="../reveal/css/theme/black.css">
+        <link rel="stylesheet" href="../reveal/lib/css/zenburn.css">
 
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/extras.css">
-		<link rel="stylesheet" href="css/highlight/zenburn.css">
-		<link rel="stylesheet" href="css/theme/sky.css" id="theme">
+		<link rel="stylesheet" href="../css/extras.css">
 
 		<style>
 			.left_indent{ /*for main headers*/
@@ -33,7 +27,7 @@
 			var link = document.createElement( 'link' );
 			link.rel = 'stylesheet';
 			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal/css/print/pdf.css' : '../reveal/css/print/paper.css';
 			document.getElementsByTagName( 'head' )[0].appendChild( link );
 		</script>
 	</head>
@@ -41,18 +35,13 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>
-					<h2>Методы укладки деревьев</h2>
-					<h3 style="padding-bottom: 25%">ФИВТ МФТИ</h3>
-					<div style="padding-bottom: 12%" align="right">
-                        <a href="mailto:Anellieme-n-fin@mail.ru"> Олег Ивченко</a>, гр. 094а
-					</div>
-					<div align="center" style="font-size: 80%; padding-bottom: 2%">
-						(в рамках курса <a href="mailto:dainiak@gmail.com"> А. Дайняка</a> <strong>"Визуализация данных" </strong>)
-					</div>
-                    <div align="center">
-                        <small>Осень 2015</small>
-                    </div>
+				<section data-background='../img/csclub.png' data-background-transition='zoom'>
+					<h2>HV-укладки деревьев</h2>
+					<section data-background='../img/csclub.png' data-background-transition='zoom'>
+                        <h1>Визуализация данных</h1>
+                        <p>Олег Ивченко &amp; Александр Дайняк @ CSClub</p>
+                        <p>12-13 ноября 2016</p>
+                    </section>
 				</section>
 
 				<section style="text-align: left">
@@ -78,7 +67,7 @@
 				<section style="text-align: left">
 					<h3 style="text-align: center">Требования к вертикальной укладке</h3>
 					<ul>
-						<li class="fragment fade-in"><div class="small_bot_indent">Вершины имеют целочисл. координаты</div></li>
+						<li class="fragment fade-in"><div class="small_bot_indent">Вершины имеют координаты из $\bbZ^2$</div></li>
 						<li class="fragment fade-in"><div class="small_bot_indent">Рёбра – прямые отрезки</div></li>
 						<li class="fragment fade-in"><div class="small_bot_indent">Потомок имеет большую ординату, чем родитель (ось <strong>OY</strong> направлена вниз)</div></li>
 					</ul>
@@ -93,13 +82,13 @@
 					<section style="text-align: center">
 						<h3>Доказательство</h3>
 						<div class="small_bot_indent" align="left">&emsp;Пусть $\forall h \gt 0$ $n = 2^h - 1, t_n = p_n \oplus c_n$</div>
-						<img class="stretch" src="img/visual/vis_hvtrees/1.jpeg" alt="Tree example">
+						<img class="stretch" src="../img/vis_hvtrees/1.jpeg" alt="Tree example">
 						<ul style="text-align: left">
 							<li>высота $C_n$ равна $h$</li>
-							<li>$P_n$ – это цепочка из $h$ вершин</li>
+							<li>$P_n$ — цепь на $h$ вершинах</li>
 						</ul>
 					</section>
-					<section>
+					<section data-background-image="../img/vis_hvtrees/1-dim.jpeg" data-background-size="contain">
 						<h3 style="text-align: center">Доказательство</h3>
 						<ul><li>Докажем, что ширина $w_h \ge h$</li>
 						<div>Т.к. $w_1 = 1$, то нужно док-ть $w_h \ge w_{h-1} + 1$</div>
@@ -126,7 +115,7 @@
 					<section style="text-align: center">
 						<h3 >Доказательство</h3>
 						<ul><li>Рассмотрим случай, когда $\delta_2$ ниже $p$.</li></ul>
-						<img class="stretch" src="img/visual/vis_hvtrees/2.jpeg" alt="Proving theorem">
+						<img class="stretch" src="../img/vis_hvtrees/2.jpeg" alt="Proving theorem">
 					</section>
 					<section>
 						<h3 style="text-align: center">Доказательство</h3>
@@ -148,7 +137,7 @@
 							либо <i>слева направо</i>,
 							либо <i>сверху вниз</i>.
 						</li>
-						<img class="stretch" src="img/visual/vis_hvtrees/3.jpeg" alt="h_v_embedding">
+						<img class="stretch" src="../img/vis_hvtrees/3.jpeg" alt="h_v_embedding">
 					</ul>
 				</section>
 
@@ -162,12 +151,12 @@
 							<li>корень $t_i$: $\rho_{\delta_{t_i}}$</li>
 							<li><div>горизонтальное склеивание: $\ominus$</div>
 								<div align="center">
-                                    <img style="border-style: none" width="32%" src="img/visual/vis_hvtrees/tree_gluing/1.jpeg" class="stretch" alt="horiz_gluing">
+                                    <img style="border-style: none" width="32%" src="../img/vis_hvtrees/tree_gluing/1.jpeg" class="stretch" alt="horiz_gluing">
                                 </div>
 							</li>
 							<li><div>вертикальное склеивание: $\oslash$</div>
 								<div align="center">
-                                    <img style="border-style: none" width="30%"src="img/visual/vis_hvtrees/tree_gluing/2.jpeg" class="stretch" alt="vert_gluing">
+                                    <img style="border-style: none" width="30%"src="../img/vis_hvtrees/tree_gluing/2.jpeg" class="stretch" alt="vert_gluing">
                                 </div>
 							</li>
 						</ul>
@@ -179,11 +168,11 @@
 					<ul><li>Если одно из деревьев пустое
 						<ul>
 							<li class="fragment" style="list-style-type: circle">$\epsilon \ominus \epsilon = \epsilon \oslash \epsilon = \bullet$</li>
-							<li class="fragment" style="list-style-type: circle">$\epsilon \ominus \delta_t = \epsilon \oslash \delta_t = $
-                                <img style="border-style: none" width="20%" src="img/visual/vis_hvtrees/tree_gluing/3.jpeg" class="stretch">
+							<li class="fragment" style="list-style-type: circle">$\epsilon \ominus \delta_t = \epsilon \oslash \delta_t = \img[width=3em,valign=-1em]{../img/vis_hvtrees/tree_gluing/3.jpeg}$
+
                             </li>
-							<li class="fragment" style="list-style-type: circle">$\delta_t \ominus \epsilon = \delta_t \oslash \epsilon = $
-                                <img style="border-style: none" width="15%" src="img/visual/vis_hvtrees/tree_gluing/4.jpeg" class="stretch">
+							<li class="fragment" style="list-style-type: circle">$\delta_t \ominus \epsilon = \delta_t \oslash \epsilon =
+                                \img[height=3em,valign=-1.5em]{../img/vis_hvtrees/tree_gluing/4.jpeg}$
                             </li>
 						</ul>
 					</li></ul>
@@ -198,7 +187,7 @@
 					<section style="text-align: center">
 						<h3>Доказательство</h3>
 						<div class="small_bot_indent" style="text-align: left">Получим $\delta'_t$ из $\delta_t$ с помощью смещения:</div>
-						<img src="img/visual/vis_hvtrees/4.jpeg" class="stretch" alt="offsetting">
+						<img src="../img/vis_hvtrees/4.jpeg" class="stretch" alt="offsetting">
 						<ul style="text-align: left">
 							<li>каждая вершина $(x, y)$ переходит в $(x, x + y)$,</li>
 							<li>рёбра перемещаются соответственно.</li>
@@ -220,7 +209,7 @@
 							<li>Горизонтальные переходят в диагональные.</li>
 						</ul>
 						<table><tr>
-							<td width="60%"><img src="img/visual/vis_hvtrees/5.jpeg" class="stretch" alt="Lemma_proving" width="100%"></td>
+							<td width="60%"><img src="../img/vis_hvtrees/5.jpeg" class="stretch" alt="Lemma_proving" width="100%"></td>
 							<td style="vertical-align: top"><div style="font-size: 70%"><div><ul style="list-style-type: circle">
 								<li>прямоугльный треуг.</li>
 								<li>катеты равны</li>
@@ -233,11 +222,11 @@
 						<ul><li class="fragment" >
 							<div>Рёбра одинак. направления, могут только накладываться</div>
 							<div class="fragment">
-								<div align="center"><img style="border-style: none" src="img/visual/vis_hvtrees/arrows/1.jpeg" class="stretch" alt="Blue arrow"></div>
+								<div align="center"><img style="border-style: none" src="../img/vis_hvtrees/arrows/1.jpeg" class="stretch" alt="Blue arrow"></div>
 								их вершины имеют равные координаты
 							</div>
 							<div class="fragment">
-								<div align="center"><img style="border-style: none" src="img/visual/vis_hvtrees/arrows/1.jpeg" class="stretch" alt="Blue arrow"></div>
+								<div align="center"><img style="border-style: none" src="../img/vis_hvtrees/arrows/1.jpeg" class="stretch" alt="Blue arrow"></div>
 								<div align="center"> <strong>противоречие!</strong> </div>
 							</div>
 						</li></ul>
@@ -249,11 +238,11 @@
 						<table cellpadding="0" cellspacing="0" border="5">
 							<tr>
 								<td width="50%" class="center">
-									<img src="img/visual/vis_hvtrees/6.jpeg" class="stretch" alt="Line intersection" width="60%">
+									<img src="../img/vis_hvtrees/6.jpeg" class="stretch" alt="Line intersection" width="60%">
                                     <table class="fragment" data-fragment-index="3"><tr>
                                         <td width="70%" style="font-size: 65%; vertical-align: top"><div>Укладка $\delta_t$ имеет</div> <div>пересечения</div></td>
                                         <td>
-                                            <img style="border-style: none" src="img/visual/vis_hvtrees/arrows/3.jpeg" class="stretch" alt="green arrow" width="110%">
+                                            <img style="border-style: none" src="../img/vis_hvtrees/arrows/3.jpeg" class="stretch" alt="green arrow" width="110%">
                                         </td>
                                     </tr></table>
 								</td>
@@ -267,7 +256,7 @@
 									</ul>
 									<div class="fragment" data-fragment-index="1" style="font-size: 70%">
 										<div align="center">
-                                            <img style="border-style: none" src="img/visual/vis_hvtrees/arrows/2.jpeg" class="stretch" alt="red arrow" width="12%">
+                                            <img style="border-style: none" src="../img/vis_hvtrees/arrows/2.jpeg" class="stretch" alt="red arrow" width="12%">
                                         </div>
 										<div>$x_1 \le x_3 \le x_2$</div>
 										<div>$x_3 + y_3 \le x_3 + y_1 \le x_3 + y_4$</div>
@@ -278,7 +267,7 @@
                         </table>
                         <table class="fragment" data-fragment-index="4" style="border-style: none; border-padding: 0"><tr>
                             <td width="30%" align="center">
-                                <img style="border-style: none" src="img/visual/vis_hvtrees/arrows/4.jpeg" class="stretch" alt="violet arrow" width="20%" height="30%">
+                                <img style="border-style: none" src="../img/vis_hvtrees/arrows/4.jpeg" class="stretch" alt="violet arrow" width="20%" height="30%">
                                 <div><strong style="font-size: 60%">Противоречие!</strong></div>
                             </td>
                             <td></td>
@@ -295,7 +284,7 @@
 							</ul>
 						</div>
 						<div class="fragment" style="text-align: center">
-							<img style="border-style: none" src="img/visual/vis_hvtrees/arrows/2.jpeg">
+							<img style="border-style: none" src="../img/vis_hvtrees/arrows/2.jpeg">
 							$$S_{\delta_t} \le 2S_{\delta_t}$$
 							(равенство при $h_{\delta_t} = w_{\delta_t}$)
 						</div>
@@ -305,7 +294,7 @@
 				<section style="text-align: left">
 					<section>
 						<h3 style="text-align: center">Алгоритм потроения h-v-укладки бинарного дерева</h3>
-<pre><code>
+<pre><code data-trim>
 def BT():
 	if "$t = e$":
 		"$\delta_t = \varepsilon$"
@@ -407,8 +396,8 @@ def BT():
 		</div>
 
 
-<script src="lib/js/head.min.js"></script>
-<script src="js/reveal.js"></script>
+<script src="../reveal/lib/js/head.min.js"></script>
+<script src="../reveal/js/reveal.js"></script>
 
 <script>
 	// Full list of configuration options available at:
@@ -418,7 +407,7 @@ def BT():
 		progress: true,
 		history: true,
 		center: true,
-		transition: 'zoom', // none/fade/slide/convex/concave/zoom
+		transition: 'convex', // none/fade/slide/convex/concave/zoom
 
 		animation: {
 			macros:    [
@@ -431,8 +420,6 @@ def BT():
 			default_transition_duration: undefined
 		},
 		highlighting: {
-			ace_main_url: 'plugin/highlight-ace/ace/ace.js',
-			ace_static_highlighter_url: 'plugin/highlight-ace/ace/ext-static_highlight.js',
 			editor_in_place: true,
 			close_editor_on_blur: false,
 			mouseclick_modifier_key: null,
@@ -449,21 +436,13 @@ def BT():
 
 		// Optional reveal.js plugins
 		dependencies: [
-			{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
-			{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-			{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-			//{ src: 'plugin/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
-			{ src: 'plugin/highlight/highlight.js',
-				async: true, condition: function() { return !!document.querySelector( 'pre code' ); },
-				callback: function() { hljs.initHighlightingOnLoad(); } },
-			{ src: 'plugin/zoom-js/zoom.js', async: true },
-			//{ src: 'plugin/notes/notes.js', async: true },
-			{ src: 'plugin/math-mod/math.js' },
-			{ src: 'plugin/animation/cssanimation.js' },
-			//{ src: 'plugin/math-katex/math-katex.js', async: false }
-			//{ src: 'plugin/webcam/webcam.js' },
-			//{ src: 'plugin/fragkey/fragkey.js' }
-			//{ src: 'plugin/search/search.js' }
+			{ src: '../reveal-plugins/zoom-js-mod/zoom.js'},
+            { src: '../reveal/plugin/highlight/highlight.js', callback: function() {
+                //hljs.initHighlightingOnLoad();
+			}},
+			{ src: '../reveal-plugins/math-mod/math.js'},
+			{ src: '../reveal-plugins/inking/inking.js' },
+			{ src: '../reveal-plugins/animation/cssanimation.js' },
 		]
 	});
 

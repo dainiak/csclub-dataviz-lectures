@@ -12,36 +12,10 @@ var RevealHighlight = (function() {
 	var ACE_URL = options.ace_main_url || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ace.js';
 	var ACE_HIGHLIGHT_URL = options.ace_static_highlighter_url || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.5/ext-static_highlight.js';
 	var EDITOR_IN_PLACE_BY_DEFAULT = options.editor_in_place !== false;
-	var CLOSE_ACE_ON_BLUR_BY_DEFAULT =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.close_editor_on_blur ?
-				Reveal.getConfig().highlighting.close_editor_on_blur
-				: false;
-	var MOUSECLICK_MODIFIER =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.mouseclick_modifier_key ?
-				Reveal.getConfig().highlighting.mouseclick_modifier_key
-				: null;
-	var ACE_DEFAULT_FONT_SIZE =
-		Reveal.getConfig().highlighting && Reveal.getConfig().highlighting.editor_default_font_size ?
-				Reveal.getConfig().highlighting.editor_default_font_size
-				: '14pt';
-
-	function loadScript( url, callback ) {
-		var head = document.querySelector( 'head' );
-		var script = document.createElement( 'script' );
-		script.type = 'text/javascript';
-		script.src = url;
-
-		// Wrapper for callback to make sure it only fires once
-		var finish = function() {
-			if( typeof callback === 'function' ) {
-				callback.call();
-				callback = null;
-			}
-		}
-
-		script.onload = finish;
-		head.appendChild( script );
-	}
+	var CLOSE_ACE_ON_BLUR_BY_DEFAULT = options.close_editor_on_blur;
+	var MOUSECLICK_MODIFIER = options.mouseclick_modifier_key;
+	var ACE_DEFAULT_FONT_SIZE = options.editor_default_font_size || '14pt';
+	var CODE_ELEMENTS_CSS_QUERY = options.css_query || 'pre code';
 
 	function attachAce(codeElement) {
 		var aceTheme = 'ace/theme/' + (codeElement.hasAttribute('data-theme') ? codeElement.getAttribute('data-theme') : ACE_DEFAULT_THEME);
@@ -49,7 +23,7 @@ var RevealHighlight = (function() {
 		var highlight = ace.require('ace/ext/static_highlight');
 
 		function doStaticHighlight(element) {
-				highlight(element, {
+			highlight(element, {
 				mode: aceMode,
 				theme: aceTheme,
 				startLineNumber: 1,
@@ -62,24 +36,20 @@ var RevealHighlight = (function() {
 		}
 
 		function destroyEditor(editor) {
-			if( editor.isInPlace ) {
+			editor.container.style.transition = '0.4s ease';
+			editor.container.style.opacity = 0;
+			setTimeout(function () {
+				if(editor.container.parentNode){
+					editor.container.parentNode.removeChild(editor.container);
+				}
 				editor.destroy();
-			}
-			else{
-				editor.container.style.transition = '0.4s ease';
-				editor.container.style.opacity = 0;
-				setTimeout(function () {
-					if(editor.container.parentNode){
-						editor.container.parentNode.removeChild(editor.container);
-					}
-					editor.destroy();
-				}, 400);
-			}
+			}, 400);
 		}
 		function destroyEditorSavingChanges(editor) {
 			editor.originalCodeElement.textContent = editor.getValue();
 			editor.originalCodeElement.setAttribute('data-raw-code', editor.getValue());
 			doStaticHighlight(editor.originalCodeElement);
+			Reveal.layout();
 			destroyEditor(editor);
 		}
 
@@ -105,26 +75,32 @@ var RevealHighlight = (function() {
 					return;
 				}
 				var editor = null;
-				var editorDiv = null;
+				var editorDiv = document.createElement('div');
+				editorDiv.style.position = 'fixed';
+				editorDiv.style.opacity = 0;
+
 				if(codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT) {
-					editor = ace.edit(codeElement);
-					editor.commands.removeCommands(["gotoline", "find"]);
+					var rect = codeElement.getBoundingClientRect();
+					editorDiv.style.height = rect.height + 'px';
+					editorDiv.style.width = rect.width + 'px';
+					editorDiv.style.top = rect.top + 'px';
+					editorDiv.style.left = rect.left + 'px';
 				}
 				else {
 					editorDiv = document.createElement('div');
-					editorDiv.style.opacity = 0;
-					editorDiv.style.position = 'fixed';
 					editorDiv.style.width = '100%';
 					editorDiv.style.height = '100%';
 					editorDiv.style.left = '0px';
 					editorDiv.style.top = '0px';
-					editorDiv.style.zIndex = window.getComputedStyle(Reveal.getCurrentSlide()).zIndex + 1;
-
-					document.body.appendChild(editorDiv);
-					editor = ace.edit(editorDiv);
-					editor.commands.removeCommands(["gotoline", "find"]);
 				}
 
+				editorDiv.style.zIndex = window.getComputedStyle(Reveal.getCurrentSlide()).zIndex + 1;
+				document.body.appendChild(editorDiv);
+
+				editor = ace.edit(editorDiv);
+				editor.commands.removeCommands(["gotoline", "find"]);
+
+				editor.isInPlace = codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT;
 				editor.$blockScrolling = Infinity; // To disable annoying ACE warning
 				var value = codeElement.hasAttribute('data-raw-code') ? codeElement.getAttribute('data-raw-code') : codeElement.textContent;
 				if (codeElement.hasAttribute( 'data-trim' )) {
@@ -140,11 +116,8 @@ var RevealHighlight = (function() {
 					showPrintMargin: false,
 					fontSize: codeElement['data-ace-font-size'] || ACE_DEFAULT_FONT_SIZE
 				});
-				if(editor.isInPlace) {
-					editor.setOptions({maxLines: Infinity});
-				}
+
 				editor.originalCodeElement = codeElement;
-				editor.isInPlace = codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT;
 				editor.focus();
 				if(CLOSE_ACE_ON_BLUR_BY_DEFAULT){
 					editor.on('blur', function(){destroyEditor(editor)});
@@ -152,23 +125,34 @@ var RevealHighlight = (function() {
 				Reveal.addEventListener('slidechanged', function(){destroyEditor(editor)});
 				Reveal.addEventListener('overviewshown', function(){destroyEditor(editor)});
 				editor.resize();
-				Reveal.layout();
 				editor.gotoLine(1);
-				if(!editor.isInPlace) {
-					editorDiv.style.transition = '0.5s ease';
-					editorDiv.style.opacity = 1;
-				}
+				editorDiv.style.transition = '0.5s ease';
+				editorDiv.style.opacity = 1;
 			}
 		}
 	}
 
-	loadScript(ACE_URL, function(){ loadScript(ACE_HIGHLIGHT_URL,function(){
-		if( typeof window.addEventListener === 'function' ) {
-			var hl_nodes = document.querySelectorAll( 'pre code' );
+	function loadScript( url, callback ) {
+		var head = document.querySelector( 'head' );
+		var script = document.createElement( 'script' );
+		script.type = 'text/javascript';
+		script.src = url;
 
-			for( var i = 0, len = hl_nodes.length; i < len; i++ ) {
-				attachAce(hl_nodes[i]);
-			}
+		script.onload = function() {
+			callback.call();
+			callback = null;
+		};
+
+		head.appendChild( script );
+	}
+
+	loadScript(ACE_URL, function(){ loadScript(ACE_HIGHLIGHT_URL, function(){
+		var hl_nodes = document.querySelectorAll(CODE_ELEMENTS_CSS_QUERY);
+
+		for( var i = 0, len = hl_nodes.length; i < len; i++ ) {
+			attachAce(hl_nodes[i]);
 		}
 	})});
+
+	return true;
 })();

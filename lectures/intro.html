@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Визуализация матриц корреляции и других матриц</title>
+
+		<link rel="stylesheet" href="../reveal/css/reveal.css">
+		<link rel="stylesheet" href="../reveal/css/theme/black.css">
+
+        <link rel="stylesheet" href="../css/extras.css">
+
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal/css/print/pdf.css' : '../reveal/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+
+	</head>
+	<body>
+<div class="reveal">
+<div class="slides">
+
+<section data-background='../img/csclub.png' data-background-transition='zoom'>
+    <h1>Визуализация данных</h1>
+	<p>Александр Дайняк @ CSClub</p>
+	<p>12-13 ноября 2016</p>
+</section>
+
+<section>
+	<section>
+		<h2>Визуализация с древних времён…</h2>
+		<img style="float: right;" class="stretch" src="../img/saxons.jpg">
+		<p style="float: left; padding-left: 20px;">Генеалогическое дерево<br/> династии Саксонов (XII век)</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/virtuestree.jpg">
+		<p style="float: left; padding-left: 20px;">Дерево добродетелей (XIV век)</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/sinstree.jpg">
+		<p style="float: left; padding-left: 20px;">Дерево грехов (XIV век)</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/k12.jpg">
+		<p style="padding-left: 20px;">
+			Логический квадрат <br>— диаграмма отношений между силлогизмами.<br>Juan de Celaya (1490—1558)</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/knighttour.jpg">
+		<p style="padding-left: 20px;">
+			Иллюстрация А.-Т. Вандермонда (1771 г.) к задаче об обходе шахматной доски конём.</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/icosian.jpg">
+		<p style="padding-left: 20px;">
+			Иллюстрация У. Гамильтона (1857) к задаче об обходе икосаэдра.</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<p>Помеченные деревья из статьи Кэли (1857)</p>
+		<img class="stretch" src="../img/cayley.jpg">
+		<p>A. Cayley. On the Theory of the Analytical Forms Called Trees. Philosophical Magazine, 4(13):172–176, 1857.</p>
+	</section>
+	<section>
+		<!--<h2>Визуализация с древних времён</h2>-->
+		<img style="float: right;" class="stretch" src="../img/molecules.jpg">
+		<p style="padding-left: 20px;">Графы молекул из статьи А.К. Брауна (1864).</p>
+	</section>
+</section>
+<section>
+	<section>
+		<h2>…до наших дней</h2>
+		<ul>
+			<li class="fragment step">W.T. Tutte ’1963. How to draw a graph</li>
+			<li class="fragment step">D.E. Knuth ’1970. How shall we draw a tree</li>
+		</ul>
+	</section>
+	<section>
+		<img class="stretch" src="../img/knuthtree.png">
+		<ol>
+			<li class="fragment highlight-current-red">Шаг вниз, нарисовать правое поддерево рекурсивно.</li>
+			<li class="fragment highlight-current-red">Шаг вверх, шаг влево, нарисовать корень</li>
+			<li class="fragment highlight-current-red">Шаг вниз, нарисовать левое поддерево рекурсивно.</li>
+		</ol>
+	</section>
+	<section>
+		<img class="stretch" src="../img/tree-summary.png">
+	</section>
+	<section>
+		<h3>Есть и NP-трудные задачи</h3>
+		<ul><li>Можно ли уложить заданное дерево на единичной сетке с рёбрам длины $1$?</li></ul>
+	</section>
+</section>
+
+<section>
+	<h2 class="fragment strikeblack">План</h2>
+	<ul>
+		<li class="fragment step">Общие вопросы</li>
+		<li class="fragment step">Конкретные инструменты</li>
+		<li class="fragment step">Визуализация графов и сетей</li>
+		<li class="fragment step">Визуализация многомерных данных</li>
+	</ul>
+</section>
+
+<section>
+	<section>
+	<h2>Общие вопросы</h2>
+	<ul>
+		<li class="fragment">Зрительное восприятие</li>
+		<li class="fragment">Способы отображения количественных данных</li>
+		<li class="fragment">Лучшие практики и типичные ошибки</li>
+	</ul>
+	</section>
+	<section>
+		<img src="../img/badpie.png" class="stretch">
+	</section>
+</section>
+
+<section>
+	<section>
+			<h2>Д. Кнут о визуализации графов</h2>
+			<p>D.E. Knuth (GD' 1996):</p>
+				<blockquote class="fragment">Graph drawing <br>is the best possible field I can think of:<br> it merges aesthetics, mathematical beauty and wonderful algorithms.
+		<br>It therefore provides a harmonic balance between the left and right brain parts.</blockquote>
+				<!--<blockquote class="fragment">A good graph drawing algorithm should leave something for the user’s satisfaction.</blockquote>-->
+	</section>
+	<section>
+		<iframe class="stretch" src="http://bl.ocks.org/mbostock/raw/4062045/"></iframe>
+	</section>
+	<section>
+		<iframe class="stretch" src="http://christophermanning.org/gists/1734663/"></iframe>
+	</section>
+</section>
+
+<section>
+	<section>
+		<img src="../img/projection.png" class="stretch">
+	</section>
+
+	<section>
+		<img src="../img/non-projectable.png" class="stretch">
+	</section>
+</section>
+
+<section>
+	<h2>Конкретные инструменты</h2>
+	<ul>
+		<li class="fragment">Standalone tools</li>
+		<li class="fragment">Python libs</li>
+		<li class="fragment">Javascript frameworks</li>
+		<li class="fragment">Cloud-based tools</li>
+		<li class="fragment">???</li>
+	</ul>
+</section>
+
+</div>
+</div>
+
+
+<script src="../reveal/lib/js/head.min.js"></script>
+<script src="../reveal/js/reveal.js"></script>
+
+<script>
+Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: true,
+    transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+    animation: {
+        macros:    [
+            ['immediately', 'during 0s'],
+            ['slowly', 'during 1s'],
+            ['fast', 'during 0.2s'],
+            ['dim', 'apply opacity = 0.4 to'],
+            ['highlight', 'apply color = red to']
+        ],
+        default_transition_duration: undefined
+    },
+    highlighting: {
+        editor_in_place: true,
+        close_editor_on_blur: false,
+        mouseclick_modifier_key: null,
+        editor_default_font_size: '14pt'
+    },
+
+    webcam: {
+        fullscreen_horizontal_padding: 20,
+        fullscreen_vertical_padding: 20,
+        fullscreen_opacity: 1,
+        shrink_on_overview: true
+    },
+
+    inking: {
+        mathDisplayStyle: true,
+        mathRenderer: 'MathJax',
+        mathMacros: [['\\1', 'one'],['\\2', '{two}']],
+        inkColor: 'lightgreen'
+    },
+
+    // More info https://github.com/hakimel/reveal.js#dependencies
+    dependencies: [
+        { src: '../reveal-plugins/zoom-js-mod/zoom.js'},
+        { src: '../reveal-plugins/math-mod/math.js' },
+        { src: '../reveal-plugins/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
+//        { src: '../reveal-plugins/inking/inking.js' },
+//        { src: '../reveal-plugins/animation/cssanimation.js' },
+    ]
+});
+</script>
+</body>
+</html>

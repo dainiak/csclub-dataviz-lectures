@@ -160,7 +160,7 @@ var RevealInking = window.RevealInking || (function (){
         }
 
         canvas.targetFindTolerance = 3;
-        window.addEventListener( 'keydown', function(evt){
+        document.addEventListener( 'keydown', function(evt){
             if(evt.keyCode == 17) {
                 enterDrawingMode();
             }
@@ -169,7 +169,7 @@ var RevealInking = window.RevealInking || (function (){
                 enterDeletionMode();
                 canvas.selection = false;
             }
-            if(evt.keyCode == 72) {
+            if(evt.keyCode == 81 ) {
                 toggleCanvas();
             }
         });
@@ -298,7 +298,7 @@ var RevealInking = window.RevealInking || (function (){
             }
         };
 
-        document.querySelector('.ink-hidecanvas').onmousedown = toggleCanvas;
+        document.querySelector('.ink-hidecanvas').onclick = function(){ toggleCanvas(); }
 
 
         Reveal.addEventListener('overviewshown', function (event) {

@@ -14,7 +14,7 @@
 		while(!target.classList.contains('zoomable') && !target.classList.contains('MathJax') && target.tagName.toLowerCase() != 'section' ){
 			target = target.parentNode;
 		}
-		console.log(target);
+
 		if( target.tagName.toLowerCase() == 'section' ){
 			target = event.target;
 		}

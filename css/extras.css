@@ -4,7 +4,7 @@
     transition-duration: 1s;
 }
 .reveal .slides section .fragment.step.visible {
-    opacity: 0.3;
+    opacity: 0.5;
     transition-duration: 1s;
     /*visibility: visible;*/
 }
@@ -36,3 +36,25 @@
     width: 100%;
     background: #068ee9;
 }
+
+.reveal .slides section .fragment.strikeblack {
+    opacity: 1;
+    visibility: visible;
+}
+.reveal .slides section .fragment.strikeblack.visible:after {
+    content: "???";
+}
+
+
+.green {
+    color: lightgreen;
+}
+
+.red {
+    color: indianred;
+}
+
+.grey-bg {
+    background-color: dimgray;
+}
+
