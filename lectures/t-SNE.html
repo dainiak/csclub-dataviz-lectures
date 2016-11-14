@@ -26,6 +26,67 @@
 	<body>
 <div class="reveal">
 <div class="slides">
+<section data-background-video='../img/mnist_tsne.mov' data-background-transition='zoom' data-background-size="contain" data-background-video-loop>
+    <h1>Визуализация точечных данных, лежащих на многообразиях</h1>
+	<p>Александр Дайняк @ CSClub</p>
+	<p>12-13 ноября 2016</p>
+</section>
+
+<section>
+    <section>
+        <h3>Общая идея</h3>
+        <ul>
+            <li class="fragment step">Данные представлены точками в пространстве большой размерности.</li>
+            <li class="fragment step">В данных есть скрытые закономерности <span class="fragment step">+ шум.</span></li>
+            <li class="fragment step">$\implies$ данные сосредоточены около поверхности неольшой размерности.</li>
+            <li class="fragment step">Ищем поверхность и распластываем на плоскости.</li>
+        </ul>
+    </section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/swiss-roll-1.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/swiss-roll-2.png"></td>
+        </tr></table>
+    </section>
+
+
+	<section>
+    <h3>На чём тестируют</h3>
+	<img src="../img/s-unfolding.png" class="stretch">
+	</section>
+
+	<section>
+	<img src="../img/swiss-roll.jfif" class="stretch">
+	</section>
+
+    <section>
+	<h3>База изображений MNIST</h3>
+	<img src="../img/mnist.png">
+    </section>
+
+	<section>
+	<img src="../img/finger-wrist.png" class="stretch">
+	</section>
+</section>
+
+
+<section>
+    <h3>Алгоритм t-SNE</h3>
+    <ul>
+        <li class="fragment step">Даны: \(\bfx_1, \dots, \bfx_N\)</li>
+        <li class="fragment step">Вычисляем \(p_{ij}\) — «похожести» \(\bfx_i\) и \(\bfx_j\), по формулам:
+            \[p_{j\mid i} = \frac{e^{-\lVert\bfx_i - \bfx_j\rVert^2 / 2\sigma_i^2}}{\step{\sum_{k \neq i} e^{-\lVert\bfx_i - \bfx_k\rVert^2 / 2\sigma_i^2}}},\step{\quad p_{ij} = \frac{p_{j\mid i} + p_{i\mid j}}{2N}},\]
+            \(\sigma_i\) выбираются исходя из перплексии: \(2^{H}=2^{-\sum _{x}p(x)\log _{2}p(x)}\).
+        </li>
+        <li class="fragment step">
+            Находим \(\bfy_1, \dots, \bfy_N \in \bbR^d\) (\(d=2\)), сходства между которыми похожи на \(p_{ij}\). Считаем сходства для \(\bfy_i\) и \(\bfy_j\) по формулам:
+            \[q_{ij} = \frac{(1 + \lVert \bfy_i - \bfy_j\rVert^2)^{-1}}{\sum_{k \neq i} (1 + \lVert \bfy_k - \bfy_i\rVert^2)^{-1}}\]
+        </li>
+        <li class="fragment step">Оптимизируем расстояние между \(p_{ij}\) и \(q_{ij}\). Какое?</li>
+    </ul>
+</section>
+
+
+
 <section>
 	<section>
 		<h1>Расстояние Кульбака—Лейблера</h1>
@@ -33,17 +94,17 @@
 	<section>
 		<h3>Как измерять расстояние между распределениями?</h3>
 		<ul>
-			<li class="fragment step">Коэффициент корреляции?</li>
+			<li class="fragment step">Коэффициент корреляции?
 			<ul>
 				<li class="fragment step">идейно просто определяется</li>
 				<li class="fragment step">неудобный градиент</li>
 				<li class="fragment step">$\in [-1,\,1]$</li>
-			</ul>
-			<li class="fragment step">Расстояние Кульбака—Лейблера</li>
+			</ul></li>
+			<li class="fragment step">Расстояние Кульбака—Лейблера
 			<ul>
 				<li class="fragment step">удовлетворяет некоторым естественным свойствам</li>
 				<li class="fragment step">не является метрикой</li>
-			</ul>
+			</ul></li>
 		</ul>
 	</section>
 	<section>
@@ -104,7 +165,42 @@
 			<li class="fragment step">$\mathrm{KL}(\green{p_1,\,\ldots,\,p_n};\,\red{q_1,\,\ldots,\,q_n})$ — «штраф» за неточное знание.</li>
 		</ul>
 	</section>
+
+
+    <section>
+        <h3>Возвращаемся к t-SNE…</h3>
+        <ul>
+            <li class="green">
+                Вычисляем «похожести» \(\bfx_i\) и \(\bfx_j\) по формулам:
+                \[p_{j\mid i} = \begin{cases}\frac{e^{-\lVert\bfx_i - \bfx_j\rVert^2 / 2\sigma_i^2}}{\sum_{k \in \calN_i} e^{-\lVert\bfx_i - \bfx_k\rVert^2 / 2\sigma_i^2}}, \text{ при $j\in\calN_i$,}\\ 0\text{ иначе.}\end{cases}\]
+                \(p_{ij} = \frac{p_{j\mid i} + p_{i\mid j}}{2N}\)
+            </li>
+            <li class="red">
+                Вычисляем «похожести» \(\bfy_i\) и \(\bfy_j\) по формулам:
+                \[q_{ij} = \frac{(1 + \lVert \bfy_i - \bfy_j\rVert^2)^{-1}}{\sum_{k \neq i} (1 + \lVert \bfy_k - \bfy_i\rVert^2)^{-1}}\]
+            </li>
+            <li>Оптимизируем расстояние Кульбака—Лейблера между \(p_{ij}\) и \(q_{ij}\). <span class="fragment">Градиент:
+            \[\frac{\delta C}{\delta \bfy_i}=4\sum_{j:\:j\neq i} (p_{ij}-q_{ij})q_{ij}\cdot Z\cdot (\bfy_i-\bfy_j),\]
+                где \(Z=\sum_{k\neq l}(1+\lVert\bfy_i-\bfy_j\rVert^2)^{-1}.\)</span></li>
+        </ul>
+    </section>
+
+    <section>
+    \[\begin{array}{l}
+    \frac{\delta C}{\delta \bfy_i}=4\sum_{j:\:j\neq i} (p_{ij}-q_{ij})q_{ij}\cdot Z\cdot (\bfy_i-\bfy_j)\\
+    \fragment{=4(F_{\text{attr}}+F_{\text{rep}})}\\
+    \fragment{=4\left(\sum_{j:\:j\neq i} p_{ij}q_{ij}\cdot Z\cdot (\bfy_i-\bfy_j)-\sum_{j:\:j\neq i} q_{ij}^2\cdot Z\cdot (\bfy_i-\bfy_j)\right)}\\
+    \end{array}\]
+    </section>
+
+    <section>
+        <h3>Дерево квадрантов</h3>
+        <img src="../img/quadtree.png" class="stretch">
+        <p class="fragment">Условия отсечения: \(\frac{r_{\text{cell}}}{\lVert \bfy_i- \bfy_{\text{cell}}\rVert}\le \theta\)</p>
+    </section>
 </section>
+
+
 <section>
 	<section>
 		<h3>Алгоритм Locally Linear Embedding</h3>
@@ -121,20 +217,186 @@
 			</footer>
 		</blockquote>
 	</section>
-	<section>
-		<ul>
-			<li class="fragment step">Предположение: многомерные данные лежат на хорошо устроенном многообразии небольшой размерности</li>
-			<li class="fragment step stretch">
-				<p>Идеал (если $\dim=2$): «развёртка», сохраняющая локальное взаиморасположение данных</p>
-				<img src="img/s-unfolding.png">
-			</li>
-		</ul>
-	</section>
+    <section>
+        <h3>Алгоритм LLE</h3>
+        <ul>
+            <li class="fragment">Ищем ближайших соседей для каждой точки: $\calN(\bfx_i)$.</li>
+            <li class="fragment">Вычисляем лучшее приближение точки её соседями: ищем $w_{i,1},\,\dots,\,w_{i,|\calN(\bfx_i)|}$, так, что
+            \[ \bfx_i =\sum_{\bfx_j\in\calN(\bfx_i)} \bfx_jw_{i,j} \]</li>
+            <li class="fragment">Находим такие \(\bfy_i\in\bbR^2,\) что \[\sum_{i}{\Bigl\lVert \bfy_i -\sum_jw_{i,j}\bfy_j \Bigr\rVert}^2\]</li>
+        </ul>
+
+    </section>
 </section>
+
 <section>
-	<h3>База изображений MNIST</h3>
-	<img src="img/mnist.png">
+    <section>
+        <h3>Алгоритм ISOMAP</h3>
+        <ul><li>Подкласс методов MDS: \[{\Biggl(\sum _{1\le i\neq j\le N}{\bigl(d_{ij}-\lVert \bfy_i-\bfy_j\rVert\bigr)}^2\Biggr)}^{1/2}\]</li></ul>
+    </section>
+    <section>
+        <ul>
+            <li>Найти соседей каждой точки \(\bfx_i\).
+                <ul><li>Все точки в круге малого радиуса</li><li>\(k\) ближайших соседей</li></ul>
+            </li>
+            <li>Построить граф соседства.
+                <ul><li>Точки смежны, если одна попадает в число соседей другой.</li><li>Веса рёбер = евклидовы расстояния.</li></ul>
+            </li>
+            <li>Вычислить кратчайшие пути</li>
+            <li>Найти \(\bfy_i\)</li>
+        </ul>
+    </section>
 </section>
+
+
+<section>
+    <section>
+    <h3>Зачем раскладывать по собственным значениям (или SVD за 5 минут)</h3>
+    <p><a href="http://www.ams.org/samplings/feature-column/fcarc-svd">http://www.ams.org/samplings/feature-column/fcarc-svd</a></p>
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/grid.gif"></td><td style="vertical-align:middle">\(\xrightarrow{\begin{bmatrix}3&0\\0&1\end{bmatrix}}\)</td> <td><img src="../img/svd/diagonal.gif"></td>
+        </tr></table>
+    </section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/grid.gif"></td><td style="vertical-align:middle">\(\xrightarrow{\begin{bmatrix}2&1\\1&2\end{bmatrix}}\)</td> <td><img src="../img/svd/symmetric.gif"></td>
+        </tr></table>
+    </section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/symmetric.domain.gif"></td><td style="vertical-align:middle">\(\xrightarrow{\begin{bmatrix}2&1\\1&2\end{bmatrix}}\)</td> <td><img src="../img/svd/symmetric.range.gif"></td>
+        </tr></table>
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/shear.svd.ellipse.gif"></td><td style="vertical-align:middle">\(\xrightarrow{M}\)</td> <td><img src="../img/svd/shear.svd.ellipse.range.gif"></td>
+        </tr></table>
+    </section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/shear.svd.basis.gif"></td><td style="vertical-align:middle">\(\xrightarrow{M}\)</td> <td><img src="../img/svd/shear.svd.range.basis.gif"></td>
+        </tr></table>
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/degenerate.domain.gif"></td><td style="vertical-align:middle">\(\xrightarrow{M}\)</td> <td><img src="../img/svd/degenerate.range.gif"></td>
+        </tr></table>
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/svd.O.gif"></td><td><img src="../img/svd/svd.O.0.gif"></td><td><img src="../img/svd/svd.O.1.gif"></td><td><img src="../img/svd/svd.O.2.gif"></td>
+        </tr></table>
+    </section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/svd/noise.gif"></td><td style="vertical-align:middle">\[\begin{array}{rcl}\lambda_1&=&14.15\\ \lambda_2&=&4.67\\ \lambda_3&=&3.00 \\ \lambda_4&=&0.21 \\ \vdots \\  \lambda_{15}&=&0.05\end{array}\]</td>
+        </tr></table>
+    </section>
+
+    <section>
+        <p>На основе собственных векторов можно рисовать графы:</p>
+    <img src="../img/graph%20spectral%20drawing.png" class="stretch">
+    </section>
+</section>
+
+
+<section>
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/swiss-roll-1.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/swiss-roll-2.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/swiss-roll-compare.png" class="stretch">
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/swiss-roll-with-hole.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/swiss-roll-with-hole-untangled.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/comparison-hole.png" class="stretch">
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/twin-peaks.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/twin-peaks-untangled.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/twin-peaks-compare.png" class="stretch">
+    </section>
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/gaussian.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/gaussian-untangled.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/gaussian-compare.png" class="stretch">
+        <p>\[(\sigma=1)\]</p>
+    </section>
+    <section>
+        <img src="../img/gaussian-compare-0.4.png" class="stretch">
+        <p>\[(\sigma=0.4)\]</p>
+    </section>
+    <section>
+        <img src="../img/gaussian-compare-0.3.png" class="stretch">
+        <p>\[(\sigma=0.3)\]</p>
+    </section>
+
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/plane.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/plane-untangled.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/plane-compare-75.png" class="stretch">
+    </section>
+    <section>
+        <img src="../img/plane-compare-135.png" class="stretch">
+    </section>
+
+
+    <section>
+        <table class="stretch"><tr>
+        <td><img src="../img/helix.png"></td><td style="vertical-align:middle">\(\to\)</td> <td><img src="../img/helix-untangled.png"></td>
+        </tr></table>
+    </section>
+    <section>
+        <img src="../img/helix-compare-noise0.png" class="stretch">
+    </section>
+    <section>
+        <img src="../img/helix-compare-noise1.png" class="stretch">
+    </section>
+    <section>
+        <img src="../img/helix-compare-noise-nonuniform.png" class="stretch">
+    </section>
+
+
+    <section>
+        <table class="stretch"><tr><td>
+            <img src="../img/psphere.png">
+        </td><td style="vertical-align: middle">
+            \(\to\)
+        </td><td>
+            <img src="../img/psphere-untangled.png">
+        </td></tr></table>
+    </section>
+    <section>
+        <img src="../img/psphere-compare.png" class="stretch">
+    </section>
+
+</section>
+
 
 
 </div>
@@ -177,16 +439,15 @@ Reveal.initialize({
     inking: {
         mathDisplayStyle: true,
         mathRenderer: 'MathJax',
-        mathMacros: [['\\1', 'one'],['\\2', '{two}']],
         inkColor: 'lightgreen'
     },
 
     dependencies: [
         { src: '../reveal-plugins/zoom-js-mod/zoom.js'},
-        { src: '../reveal-plugins/math-mod/math.js' },
-        { src: '../reveal-plugins/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
-        { src: '../reveal-plugins/inking/inking.js' },
-        { src: '../reveal-plugins/animation/cssanimation.js' },
+        { src: '../reveal-plugins/math-mod/math.js' }
+//        { src: '../reveal-plugins/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
+//        { src: '../reveal-plugins/inking/inking.js' }
+//        { src: '../reveal-plugins/animation/cssanimation.js' }
     ]
 });
 </script>

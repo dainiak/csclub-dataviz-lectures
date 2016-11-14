@@ -35,13 +35,10 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section data-background='../img/csclub.png' data-background-transition='zoom'>
+				<section data-background='../img/csclub.png' data-background-transition='zoom' data-background-size="contain">
 					<h2>HV-укладки деревьев</h2>
-					<section data-background='../img/csclub.png' data-background-transition='zoom'>
-                        <h1>Визуализация данных</h1>
                         <p>Олег Ивченко &amp; Александр Дайняк @ CSClub</p>
                         <p>12-13 ноября 2016</p>
-                    </section>
 				</section>
 
 				<section style="text-align: left">
@@ -56,7 +53,7 @@
 								<li><div>$F_0 = e, \quad F_1 = e \oplus e$,</div>
 									<div>$F_i = F_{i-1} \oplus F_{i-2}$ <code>for</code> $i \gt 1$</div></li>
 								<li>
-									<div>нумерация вершин: $n_F(0) = 0, \quad n_F(1) = 1$,</div>
+									<div>число вершин: $n_F(0) = 0, \quad n_F(1) = 1$,</div>
 									<div>$n_F(i) = n_F(i-1)+n_F(i-2)+1$ <code>for</code> $i \gt 1$</div>
 								</li>
 							</ul>
@@ -67,45 +64,44 @@
 				<section style="text-align: left">
 					<h3 style="text-align: center">Требования к вертикальной укладке</h3>
 					<ul>
-						<li class="fragment fade-in"><div class="small_bot_indent">Вершины имеют координаты из $\bbZ^2$</div></li>
-						<li class="fragment fade-in"><div class="small_bot_indent">Рёбра – прямые отрезки</div></li>
-						<li class="fragment fade-in"><div class="small_bot_indent">Потомок имеет большую ординату, чем родитель (ось <strong>OY</strong> направлена вниз)</div></li>
+						<li class="fragment step"><div class="small_bot_indent">Вершины имеют координаты из $\bbZ^2$</div></li>
+						<li class="fragment step"><div class="small_bot_indent">Рёбра — отрезки прямых</div></li>
+						<li class="fragment step"><div class="small_bot_indent">Потомок имеет большую ординату, чем родитель (ось <strong>OY</strong> направлена вниз)</div></li>
 					</ul>
 				</section>
 
 				<section style="text-align: left">
 					<section>
 						<h3 style="text-align: center">Нижняя граница площади укладки</h3>
-						<div><strong>&emsp;Теорема 1. </strong>Площадь вертикальной укладки
-								дерева имеет нижнюю границу $O(n \log n)$.</div>
+						<div><strong>&emsp;Теорема 1. </strong>Площадь вертикальной укладки дерева имеет нижнюю границу $O(n \log n)$.</div>
 					</section>
 					<section style="text-align: center">
 						<h3>Доказательство</h3>
-						<div class="small_bot_indent" align="left">&emsp;Пусть $\forall h \gt 0$ $n = 2^h - 1, t_n = p_n \oplus c_n$</div>
+						<div class="small_bot_indent" align="left">&emsp;Для $h \gt 0$ положим $n = 2^h - 1, t_n = p_n \oplus c_n$</div>
 						<img class="stretch" src="../img/vis_hvtrees/1.jpeg" alt="Tree example">
 						<ul style="text-align: left">
 							<li>высота $C_n$ равна $h$</li>
 							<li>$P_n$ — цепь на $h$ вершинах</li>
 						</ul>
 					</section>
-					<section data-background-image="../img/vis_hvtrees/1-dim.jpeg" data-background-size="contain">
+					<section>
 						<h3 style="text-align: center">Доказательство</h3>
 						<ul><li>Докажем, что ширина $w_h \ge h$</li>
-						<div>Т.к. $w_1 = 1$, то нужно док-ть $w_h \ge w_{h-1} + 1$</div>
+						<div>Т.к. $w_1 = 1$, то нужно док-ть, что $w_h \ge w_{h-1} + 1$</div>
 							<li class="fragment" style="list-style-type: none">
 								<ul style="list-style-type: circle">
-									<li>$\delta^m_{c_h}$ - укладка $C_n$ с минимальной шириной</li>
-									<li>$\delta_1$, $\delta_2$ - укладка дочерних поддеревьев</li>
+									<li>$\delta^m_{c_h}$ — укладка $C_n$ с минимальной шириной</li>
+									<li>$\delta_1$, $\delta_2$ — укладка дочерних поддеревьев</li>
 								</ul>
 							</li>
 							<li class="fragment">
 								Возможны 2 случая:
 								<ul style="list-style-type: circle">
-									<li>$w_{\delta_1} \lt w_{\delta_2}$ $(w_{\delta_1} \gt w_{\delta_2})$</li>
+									<li>$w_{\delta_1} \lt w_{\delta_2}$ (или $w_{\delta_1} \gt w_{\delta_2}$)</li>
 									<li>$w_{\delta_1} = w_{\delta_2}$</li>
 									<ul class="fragment" style="list-style-type: square">
-										<li>$w_{\delta^m_{c_h}} = w_h \gt w_{\delta_1} ( \gt w_{\delta_2})$ - очевидно</li>
-										<li>$w_{\delta^m_{c_h}} = w_h = w_{\delta_1} ( = w_{\delta_2})$ - Док-во от противного
+										<li>$w_{\delta^m_{c_h}} = w_h \gt w_{\delta_1} ( \gt w_{\delta_2})$ — очевидно</li>
+										<li>$w_{\delta^m_{c_h}} = w_h = w_{\delta_1} ( = w_{\delta_2})$ — от противного
 										$(w_h = w_{h - 1})$</li>
 									</ul>
 								</ul>
@@ -120,17 +116,17 @@
 					<section>
 						<h3 style="text-align: center">Доказательство</h3>
 						<ul>
-							<li>Корень $\delta^m_{c_h}$ может соединяться с корнями $\delta_1$, $\delta_2$
+							<li>Корень $\delta^m_{c_h}$ должен соединяться с корнями $\delta_1$, $\delta_2$
 							без пересечений и в соответствии с <a href="#/2"> требованиями</a>.</li>
-							<li class="fragment">$w_h \ge w_{h-1} + 1$ - <strong>противоречие</strong></li>
+							<li class="fragment">Если $w_h \ge w_{h-1} + 1$, то противоречие.</li>
 							<li class="fragment">Для любой вертикальной укладки $\delta_{t_n}, h_{\delta_{t_n}} \ge n$
 							$$w_{\delta_{t_n}} \ge h = \left \lceil \log(2^h - 1) \right \rceil = \left \lceil \log n \right \rceil $$</li>
-							<li class="fragment">Т.к. число узлов $t_n$ равно $2n + 1$, то укладка будет занимать $\Omega(n \log n)$.</li>
+							<li class="fragment">Т.к. число узлов $t_n$ равно $2n + 1$, то площадь укладки есть $\Omega(n \log n)$.</li>
 						</ul>
 					</section>
 				</section>
 				<section style="text-align: left">
-					<h3 style="text-align: center">h-v-укладка</h3>
+					<h3 style="text-align: center">hv-укладка</h3>
 					<ul>
 						<li>
 							Корень всегда <i>вверху слева</i>, т.е. рёбра
@@ -186,7 +182,7 @@
 					</section>
 					<section style="text-align: center">
 						<h3>Доказательство</h3>
-						<div class="small_bot_indent" style="text-align: left">Получим $\delta'_t$ из $\delta_t$ с помощью смещения:</div>
+						<div class="small_bot_indent" style="text-align: left">Получим $\delta'_t$ из $\delta_t$ с помощью скашивания:</div>
 						<img src="../img/vis_hvtrees/4.jpeg" class="stretch" alt="offsetting">
 						<ul style="text-align: left">
 							<li>каждая вершина $(x, y)$ переходит в $(x, x + y)$,</li>
@@ -211,7 +207,7 @@
 						<table><tr>
 							<td width="60%"><img src="../img/vis_hvtrees/5.jpeg" class="stretch" alt="Lemma_proving" width="100%"></td>
 							<td style="vertical-align: top"><div style="font-size: 70%"><div><ul style="list-style-type: circle">
-								<li>прямоугльный треуг.</li>
+								<li>прямоугольный треугольник</li>
 								<li>катеты равны</li>
 							</ul></div></div></td>
 						</tr></table>
@@ -220,7 +216,7 @@
 						<h3 style="text-align: center">Доказательство</h3>
 						<div>Докажем, что рёбра не пересекаются.</div>
 						<ul><li class="fragment" >
-							<div>Рёбра одинак. направления, могут только накладываться</div>
+							<div>Рёбра одного направления могут только накладываться</div>
 							<div class="fragment">
 								<div align="center"><img style="border-style: none" src="../img/vis_hvtrees/arrows/1.jpeg" class="stretch" alt="Blue arrow"></div>
 								их вершины имеют равные координаты
@@ -305,20 +301,22 @@ def BT():
 </code></pre>
 						<div class="fragment"><div class="small_bot_indent">
 							&emsp; <strong>Теорема 2.</strong> Для дерева с $n$ вершинами данный алгоритм строит h-v-укладку площади не более
-							$(n \log n + 1) n$ за линейное время и линейную память.
+							$(\log n + 1) n$ за линейное время и линейную память.
 						</div></div>
 					</section>
 					<section>
 						<h3 style="text-align: center">Доказательство</h3>
-						<div>Докажем по методу мат. индукции:</div>
-						<div class="left_indent">$h_{\delta_t} \le n$</div>
-						<div class="left_indent">$w_{\delta_t} \le \log n + 1$</div>
+						<div>Индукцией доказываем, что:</div>
+                        <ul>
+                            <li class="left_indent">$h_{\delta_t} \le n$</li>
+                            <li class="left_indent">$w_{\delta_t} \le \log n + 1$</li>
+                        </ul>
 						<ul>
 							<li class="fragment">
 								<strong>База.</strong> Для $n = 1$ очевидно $h_1 = 1$, $w_1 \le \log 1 + 1 = 1$.
 							</li>
 							<li class="fragment">
-								<strong>Гипотеза.</strong>Утверждение справедливо для деревьев на $\lt n$ вершинах.
+								<strong>Предп. инд.</strong> Утверждение справедливо для деревьев на $\lt n$ вершинах.
 							</li>
 						</ul>
 					</section>
@@ -327,7 +325,7 @@ def BT():
 						<ul><li>
 							<strong>Доказательство.</strong> Предположим:
 							<div class="small_bot_indent"><ul style="list-style-type: circle; font-size: 80%">
-								<li>$t = t_1 \oplus t_2$ - дерево с $n$ вершинами</li>
+								<li>$t = t_1 \oplus t_2$ — дерево с $n$ вершинами</li>
 								<li>пусть $w_{\delta_{t_1}} \le w_{\delta_{t_2}}$</li>
 								<li>деревья объединяются с помощью вертикального склеивания
 								(для $\ominus$ предположение $h_{\delta_{t_1}} \le h_{\delta_{t_2}}$)</li>
@@ -361,7 +359,7 @@ def BT():
 							</td>
 						</tr></table>
 						<div class="small_bot_indent"><ul style="list-style-type: circle" class="fragment"><li>
-							т.к. $n_1 + n_2 \lt n$, то гипотеза выполняется.
+							т.к. $n_1 + n_2 \lt n$, то условия предп. инд. выполняется.
 						</li></ul></div>
 					</section>
 					<section>
@@ -372,7 +370,7 @@ def BT():
 							<div>$w_{\delta_t} = w + 1$</div>
 						</li></ul>
 						<div class="small_bot_indent"><ul style="list-style-type: circle" class="fragment"><li>
-							Из <a href="#/8/1">гипотезы</a> следует: $w \le \log n_i + 1, i = \overline{1,2}$
+							Из <a href="#/8/1">предп. инд.</a> следует: $w \le \log n_i + 1, i = \overline{1,2}$
 							<div class="left_indent">
 								<div class="fragment">$n_i \ge 2^{w-1}$</div>
 								<div class="fragment">$n = n_1 + n_2 + 1 \ge 2^w + 1$</div>
@@ -390,7 +388,7 @@ def BT():
 				</section>
 
 				<section>
-					<h3 style="text-align: center">Спасибо за внимание!</h3>
+					<h3 style="text-align: center">Fin!</h3>
 				</section>
 			</div>
 		</div>
@@ -437,9 +435,9 @@ def BT():
 		// Optional reveal.js plugins
 		dependencies: [
 			{ src: '../reveal-plugins/zoom-js-mod/zoom.js'},
-            { src: '../reveal/plugin/highlight/highlight.js', callback: function() {
-                //hljs.initHighlightingOnLoad();
-			}},
+//            { src: '../reveal/plugin/highlight/highlight.js', callback: function() {
+//                hljs.initHighlightingOnLoad();
+//			}},
 			{ src: '../reveal-plugins/math-mod/math.js'},
 			{ src: '../reveal-plugins/inking/inking.js' },
 			{ src: '../reveal-plugins/animation/cssanimation.js' },
