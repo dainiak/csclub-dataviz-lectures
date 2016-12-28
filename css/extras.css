@@ -1,15 +1,16 @@
 /* CSS for highlighting single steps in enumeration */
 .reveal .slides section .fragment.step {
-    opacity: 0;
     transition-duration: 1s;
 }
 .reveal .slides section .fragment.step.visible {
-    opacity: 0.5;
+    /*opacity: 1;*/
+    color: rgb(150,150,150);
     transition-duration: 1s;
     /*visibility: visible;*/
 }
-.reveal .slides section .fragment.step.current-fragment {
-    opacity: 1;
+.reveal .slides section .fragment.step.visible.current-fragment {
+    /*opacity: 1;*/
+    color: rgb(255,255,255);
     transition-duration: 1s;
     /*visibility: visible;*/
 }

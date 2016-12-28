@@ -73,9 +73,11 @@
     <h3>Алгоритм t-SNE</h3>
     <ul>
         <li class="fragment step">Даны: \(\bfx_1, \dots, \bfx_N\)</li>
-        <li class="fragment step">Вычисляем \(p_{ij}\) — «похожести» \(\bfx_i\) и \(\bfx_j\), по формулам:
-            \[p_{j\mid i} = \frac{e^{-\lVert\bfx_i - \bfx_j\rVert^2 / 2\sigma_i^2}}{\step{\sum_{k \neq i} e^{-\lVert\bfx_i - \bfx_k\rVert^2 / 2\sigma_i^2}}},\step{\quad p_{ij} = \frac{p_{j\mid i} + p_{i\mid j}}{2N}},\]
-            \(\sigma_i\) выбираются исходя из перплексии: \(2^{H}=2^{-\sum _{x}p(x)\log _{2}p(x)}\).
+        <li class="fragment step">Вычисляем \(p_{ij}\) — «похожести» \(\bfx_i\) и \(\bfx_j\), по формулам: \[
+                p_{j\mid i} = \frac{e^{-\lVert\bfx_i - \bfx_j\rVert^2 / 2\sigma_i^2}}{\step{\sum_{k \neq i} e^{-\lVert\bfx_i - \bfx_k\rVert^2 / 2\sigma_i^2}}}
+                \step{,\quad p_{ij} = \frac{p_{j\mid i} + p_{i\mid j}}{2N},}
+            \]
+            <span class="fragment step">\(\sigma_i\) выбираются, исходя из перплексии: \(2^{H}=2^{-\sum _{x}p(x)\log _{2}p(x)}\).</span>
         </li>
         <li class="fragment step">
             Находим \(\bfy_1, \dots, \bfy_N \in \bbR^d\) (\(d=2\)), сходства между которыми похожи на \(p_{ij}\). Считаем сходства для \(\bfy_i\) и \(\bfy_j\) по формулам:
@@ -411,30 +413,15 @@ Reveal.initialize({
     history: true,
     center: true,
     transition: 'convex', // none/fade/slide/convex/concave/zoom
+    width: 1280,
+    height: 720,
 
-    animation: {
-        macros:    [
-            ['immediately', 'during 0s'],
-            ['slowly', 'during 1s'],
-            ['fast', 'during 0.2s'],
-            ['dim', 'apply opacity = 0.4 to'],
-            ['highlight', 'apply color = red to']
-        ],
-        default_transition_duration: undefined
-    },
-    highlighting: {
-        editor_in_place: true,
-        close_editor_on_blur: false,
-        mouseclick_modifier_key: null,
-        editor_default_font_size: '14pt'
-    },
+    // Factor of the display size that should remain empty around the content
+    margin: 0.05,
 
-    webcam: {
-        fullscreen_horizontal_padding: 20,
-        fullscreen_vertical_padding: 20,
-        fullscreen_opacity: 1,
-        shrink_on_overview: true
-    },
+    // Bounds for smallest/largest possible scale to apply to content
+    minScale: 0.2,
+    maxScale: 3.0,
 
     inking: {
         mathDisplayStyle: true,
@@ -444,10 +431,8 @@ Reveal.initialize({
 
     dependencies: [
         { src: '../reveal-plugins/zoom-js-mod/zoom.js'},
-        { src: '../reveal-plugins/math-mod/math.js' }
-//        { src: '../reveal-plugins/highlight-ace/highlight-ace.js', condition: function() { return !!document.querySelector( 'pre code' ); }},
-//        { src: '../reveal-plugins/inking/inking.js' }
-//        { src: '../reveal-plugins/animation/cssanimation.js' }
+        { src: '../reveal-plugins/math-mod/math.js' },
+        { src: '../reveal-plugins/inking/inking.js' }
     ]
 });
 </script>

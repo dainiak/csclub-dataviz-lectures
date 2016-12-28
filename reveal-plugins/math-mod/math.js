@@ -33,7 +33,7 @@ var RevealMath = window.RevealMath || (function(){
 "		inlineMath: [['$','$'],['\\\\(','\\\\)']]," +
 "		displayMath: [['$$','$$'],['\\\\[','\\\\]']]," +
 "		skipTags: ['script','noscript','style','textarea']," +
-"		processEnvironments: false," +
+"		processEnvironments: true," +
 "		preview: 'none'" +
 "	}," +
 
@@ -91,6 +91,7 @@ var RevealMath = window.RevealMath || (function(){
 "			emptyset: '\\\\varnothing'," +
 "			epsilon: '\\\\varepsilon'," +
 "			step: ['\\\\class{fragment step}{#1}', 1]," +
+"			fragment: ['\\\\class{fragment}{#1}', 1]," +
 "			zoomable: ['\\\\class{zoomable}{#1}', 1]," +
 "			green: ['\\\\class{green}{#1}', 1]," +
 "			red: ['\\\\class{red}{#1}', 1]" +
@@ -105,18 +106,45 @@ var RevealMath = window.RevealMath || (function(){
     ];
 
 	loadScripts(scriptsToLoad, function () {
-		MathJax.Hub.Queue( [ 'Typeset', MathJax.Hub ] );
-		MathJax.Hub.Queue( function(){
-            document.querySelectorAll('[data-fragment-index]').forEach(function (element){
-                element.removeAttribute('data-fragment-index');
-            });
-            Reveal.layout();
-		} );
+        function typesetMath() {
+            MathJax.Hub.Queue( [ 'Typeset', MathJax.Hub ] );
+            MathJax.Hub.Queue( function(){
+                MathJax.Hub.getAllJax('.slides').forEach(function (jax) {
+                    var node = document.getElementById(jax.inputID + '-Frame');
+                    if(node && node.querySelector('.fragment')){
 
-		Reveal.addEventListener( 'slidechanged', function( event ) {
-			//MathJax.Hub.Queue( [ 'Reprocess', MathJax.Hub, event.currentSlide ] );
-            //MathJax.Hub.Queue( [ 'Rerender', MathJax.Hub, event.currentSlide ] );
-		} );
+                        while( node.tagName.toLowerCase() != 'section' ){
+                            node = node.parentNode;
+                        }
+
+                        var fragments = node.querySelectorAll('[data-fragment-index]');
+                        for(var i = 0; i < fragments.length; ++i) {
+                            fragments[i].removeAttribute('data-fragment-index');
+                        }
+                        return;
+                    }
+                });
+                Reveal.sync();
+            } );
+        }
+
+        if(Reveal.isReady()) {
+            typesetMath();
+        }
+        else
+            Reveal.addEventListener('ready', typesetMath);
+
+		// Reveal.addEventListener( 'slidechanged', function( event ) {
+         //    var curSlide = event.currentSlide;
+         //    MathJax.Hub.Queue( [ 'Rerender', MathJax.Hub, curSlide ] );
+         //    MathJax.Hub.Queue( function(){
+         //        var fragments = curSlide.querySelectorAll('[data-fragment-index]');
+         //        for(var i = 0; i < fragments.length; ++i) {
+         //            fragments[i].removeAttribute('data-fragment-index');
+         //        }
+         //        Reveal.sync();
+		//     });
+		// });
 	});
 
 
