@@ -62,7 +62,7 @@ var RevealInking = window.RevealInking || (function (){
         }, {
             type: 'text/x-mathjax-config',
             content: options.mathjaxConfig ||
-                "MathJax.Ajax.config.path['Contrib'] = 'https://cdn.mathjax.org/mathjax/contrib';"
+                "MathJax.Ajax.config.path['Contrib'] = 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/contrib';"
                 + "MathJax.Hub.Config({"
                 + "skipStartupTypeset: true, messageStyle: 'none', showMathMenu: false, showMathMenuMSIE: false, showProcessingMessages: false,"
                 + "extensions: ['tex2jax.js'],"
@@ -72,7 +72,7 @@ var RevealInking = window.RevealInking || (function (){
                 + "});",
             condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
         }, {
-            url: 'https://cdn.mathjax.org/mathjax/latest/MathJax.js',
+            url: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
             condition: FORMULAE_SUPPORT_ENABLED && MATH_RENDERING_ENGINE == 'MathJax' && !window.MathJax
         }
     ];

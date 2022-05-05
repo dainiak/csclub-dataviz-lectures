@@ -6,12 +6,12 @@
  */
 var RevealMath = window.RevealMath || (function(){
 	var options = Reveal.getConfig().math || {};
-	options.mathjax = options.mathjax || 'https://cdn.mathjax.org/mathjax/latest/MathJax.js';
+	options.mathjax = options.mathjax || 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js';
 	var scriptsToLoad = [
 		{
             type: 'text/x-mathjax-config',
             content: options.mathjaxConfig ||
-"MathJax.Ajax.config.path['Contrib'] = '//cdn.mathjax.org/mathjax/contrib';" +
+"MathJax.Ajax.config.path['Contrib'] = '//cdn.jsdelivr.net/npm/mathjax@2.7.9/contrib';" +
 "MathJax.Hub.Config({" +
 "	extensions: [" +
 "		'tex2jax.js'," +
